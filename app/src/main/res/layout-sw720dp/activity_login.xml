@@ -10,14 +10,17 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="24dp">
+        android:paddingLeft="80dp"
+        android:paddingRight="80dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_horizontal"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="18dp">
 
             <TextView
                 android:id="@+id/txtBrand"
@@ -25,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:text="wish.net TV"
                 android:textColor="#E50914"
-                android:textSize="30sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.03" />
 
@@ -33,65 +36,72 @@
                 android:id="@+id/txtSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="4dp"
                 android:text="Tu plataforma de TV en vivo"
                 android:textColor="#9CA3AF"
-                android:textSize="13sp" />
+                android:textSize="11sp" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="340dp"
+            android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="#141922"
-            android:padding="22dp">
+            android:padding="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Iniciar sesión"
                 android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="12dp" />
 
             <EditText
                 android:id="@+id/email"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="12dp"
-                android:background="#0B0F17"
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/tv_input_selector"
                 android:hint="Correo electrónico"
                 android:inputType="textEmailAddress"
-                android:paddingLeft="14dp"
-                android:paddingRight="14dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#6B7280"
-                android:textSize="14sp" />
+                android:textSize="12sp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusDown="@id/password" />
 
             <EditText
                 android:id="@+id/password"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="12dp"
-                android:background="#0B0F17"
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/tv_input_selector"
                 android:hint="Contraseña"
                 android:inputType="textPassword"
-                android:paddingLeft="14dp"
-                android:paddingRight="14dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#6B7280"
-                android:textSize="14sp" />
+                android:textSize="12sp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/email"
+                android:nextFocusDown="@id/btnLogin" />
 
             <TextView
                 android:id="@+id/txtError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="8dp"
                 android:layout_gravity="center"
                 android:text=""
                 android:textColor="#F87171"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:gravity="center"
                 android:textAlignment="center"
                 android:visibility="gone" />
@@ -99,20 +109,23 @@
             <Button
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:backgroundTint="#E50914"
+                android:layout_height="40dp"
+                android:background="@drawable/tv_button_selector"
                 android:text="Ingresar"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/password" />
 
             <ProgressBar
                 android:id="@+id/progressLogin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="10dp"
                 android:visibility="gone" />
         </LinearLayout>
 

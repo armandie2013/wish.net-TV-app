@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -14,11 +15,13 @@ import com.example.wishnet_tv_app.data.api.ApiClient
 import com.example.wishnet_tv_app.data.model.LoginRequest
 import com.example.wishnet_tv_app.ui.home.HomeActivity
 import com.example.wishnet_tv_app.ui.password.ChangePasswordActivity
+import com.example.wishnet_tv_app.utils.ApiErrorParser
 import com.example.wishnet_tv_app.utils.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.util.Patterns
 
 class LoginActivity : AppCompatActivity() {
 
@@ -31,6 +34,9 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+
         setContentView(R.layout.activity_login)
 
         sessionManager = SessionManager(this)
@@ -41,12 +47,29 @@ class LoginActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressLogin)
         errorText = findViewById(R.id.txtError)
 
+        loginButton.requestFocus()
+
         loginButton.setOnClickListener {
             attemptLogin()
         }
 
         passwordEditText.setOnKeyListener { _, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+            if (
+                event.action == KeyEvent.ACTION_DOWN &&
+                (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
+            ) {
+                attemptLogin()
+                true
+            } else {
+                false
+            }
+        }
+
+        loginButton.setOnKeyListener { _, keyCode, event ->
+            if (
+                event.action == KeyEvent.ACTION_DOWN &&
+                (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
+            ) {
                 attemptLogin()
                 true
             } else {
@@ -64,6 +87,11 @@ class LoginActivity : AppCompatActivity() {
 
         if (email.isEmpty() || password.isEmpty()) {
             showError("Completá email y contraseña")
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showError("Ingresá un correo válido")
             return
         }
 
@@ -92,7 +120,12 @@ class LoginActivity : AppCompatActivity() {
                         )
 
                         if (response.mustChangePassword) {
-                            startActivity(Intent(this@LoginActivity, ChangePasswordActivity::class.java))
+                            startActivity(
+                                Intent(
+                                    this@LoginActivity,
+                                    ChangePasswordActivity::class.java
+                                )
+                            )
                             finish()
                             return@withContext
                         }
@@ -106,7 +139,7 @@ class LoginActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     setLoading(false)
-                    showError("Error de conexión: ${e.message}")
+                    showError(ApiErrorParser.getMessage(e))
                 }
             }
         }
