@@ -61,6 +61,18 @@ class ChangePasswordActivity : AppCompatActivity() {
                 false
             }
         }
+
+        saveButton.setOnKeyListener { _, keyCode, event ->
+            if (
+                event.action == KeyEvent.ACTION_DOWN &&
+                (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
+            ) {
+                attemptChangePassword()
+                true
+            } else {
+                false
+            }
+        }
     }
 
     private fun attemptChangePassword() {
@@ -114,6 +126,8 @@ class ChangePasswordActivity : AppCompatActivity() {
 
     private fun setLoading(isLoading: Boolean) {
         saveButton.isEnabled = !isLoading
+        newPasswordEditText.isEnabled = !isLoading
+        confirmPasswordEditText.isEnabled = !isLoading
         progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         saveButton.text = if (isLoading) "Guardando..." else "Guardar nueva contraseña"
     }

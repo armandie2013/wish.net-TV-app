@@ -9,7 +9,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingLeft="80dp"
+        android:paddingRight="80dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="32dp">
 
         <TextView
             android:id="@+id/txtWelcome"
@@ -17,7 +20,7 @@
             android:layout_height="wrap_content"
             android:text="Bienvenida"
             android:textColor="#FFFFFF"
-            android:textSize="28sp"
+            android:textSize="30sp"
             android:textStyle="bold" />
 
         <TextView
@@ -27,72 +30,78 @@
             android:layout_marginTop="6dp"
             android:text="Tu acceso a wish.net TV está listo."
             android:textColor="#9CA3AF"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="28dp"
             android:orientation="vertical"
             android:background="#141922"
-            android:padding="18dp">
+            android:padding="22dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Estado de la cuenta"
                 android:textColor="#FFFFFF"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txtStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:text="Sesión activa"
                 android:textColor="#86EFAC"
-                android:textSize="15sp" />
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/txtUserInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:text="Ya podés continuar al catálogo de canales"
                 android:textColor="#D1D5DB"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="420dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="22dp"
             android:orientation="vertical"
             android:background="#141922"
-            android:padding="18dp">
+            android:padding="20dp">
 
             <Button
                 android:id="@+id/btnGoChannels"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:backgroundTint="#E50914"
+                android:layout_height="46dp"
+                android:background="@drawable/tv_button_selector"
                 android:text="Ver canales"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusDown="@id/btnLogout" />
 
             <Button
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="46dp"
                 android:layout_marginTop="12dp"
-                android:backgroundTint="#1F2937"
+                android:background="@drawable/tv_button_secondary_selector"
                 android:text="Cerrar sesión"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btnGoChannels" />
         </LinearLayout>
 
     </LinearLayout>

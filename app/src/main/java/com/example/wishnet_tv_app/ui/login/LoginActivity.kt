@@ -1,10 +1,13 @@
 package com.example.wishnet_tv_app.ui.login
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -21,7 +24,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.util.Patterns
 
 class LoginActivity : AppCompatActivity() {
 
@@ -36,7 +38,6 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
-
         setContentView(R.layout.activity_login)
 
         sessionManager = SessionManager(this)
@@ -48,6 +49,23 @@ class LoginActivity : AppCompatActivity() {
         errorText = findViewById(R.id.txtError)
 
         loginButton.requestFocus()
+
+        // 🔥 EFECTO FOCO (ZOOM SUAVE)
+        loginButton.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.animate()
+                    .scaleX(1.08f)
+                    .scaleY(1.08f)
+                    .setDuration(120)
+                    .start()
+            } else {
+                view.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(120)
+                    .start()
+            }
+        }
 
         loginButton.setOnClickListener {
             attemptLogin()
@@ -94,6 +112,14 @@ class LoginActivity : AppCompatActivity() {
             showError("Ingresá un correo válido")
             return
         }
+
+        // Quitar foco de los campos y dejarlo en el botón
+        emailEditText.clearFocus()
+        passwordEditText.clearFocus()
+        loginButton.requestFocus()
+
+        // Ocultar teclado
+        hideKeyboard()
 
         setLoading(true)
 
@@ -146,13 +172,26 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setLoading(isLoading: Boolean) {
+        // Botón
         loginButton.isEnabled = !isLoading
-        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         loginButton.text = if (isLoading) "Ingresando..." else "Ingresar"
+
+        // Inputs (bloqueo mientras carga)
+        emailEditText.isEnabled = !isLoading
+        passwordEditText.isEnabled = !isLoading
+
+        // Loader
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun showError(message: String) {
         errorText.text = message
         errorText.visibility = View.VISIBLE
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val view = currentFocus ?: loginButton
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 }
