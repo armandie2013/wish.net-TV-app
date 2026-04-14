@@ -25,15 +25,19 @@
             android:exported="false"
             android:theme="@style/Theme.WishnetTVapp" />
 
+        <!-- LOGIN -->
         <activity
             android:name=".ui.login.LoginActivity"
             android:exported="false"
-            android:theme="@style/Theme.WishnetTVapp" />
+            android:theme="@style/Theme.WishnetTVapp"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
 
+        <!-- CHANGE PASSWORD -->
         <activity
             android:name=".ui.password.ChangePasswordActivity"
             android:exported="false"
-            android:theme="@style/Theme.WishnetTVapp" />
+            android:theme="@style/Theme.WishnetTVapp"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
 
         <activity
             android:name=".MainActivity"

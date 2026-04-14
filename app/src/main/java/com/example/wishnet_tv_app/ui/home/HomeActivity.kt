@@ -3,7 +3,7 @@ package com.example.wishnet_tv_app.ui.home
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wishnet_tv_app.R
@@ -17,8 +17,12 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var subtitleText: TextView
     private lateinit var statusText: TextView
     private lateinit var userInfoText: TextView
-    private lateinit var btnGoChannels: Button
-    private lateinit var btnLogout: Button
+
+    private lateinit var cardLiveTv: LinearLayout
+    private lateinit var cardCategories: LinearLayout
+    private lateinit var cardFavorites: LinearLayout
+    private lateinit var cardAccount: LinearLayout
+    private lateinit var cardLogout: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,8 +34,12 @@ class HomeActivity : AppCompatActivity() {
         subtitleText = findViewById(R.id.txtHomeSubtitle)
         statusText = findViewById(R.id.txtStatus)
         userInfoText = findViewById(R.id.txtUserInfo)
-        btnGoChannels = findViewById(R.id.btnGoChannels)
-        btnLogout = findViewById(R.id.btnLogout)
+
+        cardLiveTv = findViewById(R.id.cardLiveTv)
+        cardCategories = findViewById(R.id.cardCategories)
+        cardFavorites = findViewById(R.id.cardFavorites)
+        cardAccount = findViewById(R.id.cardAccount)
+        cardLogout = findViewById(R.id.cardLogout)
 
         val userName = sessionManager.getUserName() ?: "Usuario"
         val token = sessionManager.getToken()
@@ -51,57 +59,93 @@ class HomeActivity : AppCompatActivity() {
             "Ya podés continuar al catálogo de canales"
         }
 
-        btnGoChannels.requestFocus()
+        cardLiveTv.requestFocus()
 
-        btnGoChannels.setOnClickListener {
-            // Más adelante acá vamos a abrir la pantalla de canales
+        setupPrimaryCardFocus(cardLiveTv)
+        setupSecondaryCardFocus(cardCategories)
+        setupSecondaryCardFocus(cardFavorites)
+        setupSecondaryCardFocus(cardAccount)
+        setupSecondaryCardFocus(cardLogout)
+
+        cardLiveTv.setOnClickListener {
+            // Próximo paso: abrir catálogo real de canales
         }
 
-        btnLogout.setOnClickListener {
+        cardCategories.setOnClickListener {
+            // Próximo paso: abrir categorías
+        }
+
+        cardFavorites.setOnClickListener {
+            // Próximo paso: abrir favoritos
+        }
+
+        cardAccount.setOnClickListener {
+            // Próximo paso: abrir cuenta
+        }
+
+        cardLogout.setOnClickListener {
             sessionManager.clearSession()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
 
-        btnGoChannels.setOnKeyListener { _, keyCode, event ->
+        setEnterAction(cardLiveTv) { }
+        setEnterAction(cardCategories) { }
+        setEnterAction(cardFavorites) { }
+        setEnterAction(cardAccount) { }
+        setEnterAction(cardLogout) {
+            sessionManager.clearSession()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
+    }
+
+    private fun setupPrimaryCardFocus(view: LinearLayout) {
+        view.setOnFocusChangeListener { target, hasFocus ->
+            if (hasFocus) {
+                target.animate()
+                    .scaleX(1.01f)
+                    .scaleY(1.01f)
+                    .setDuration(120)
+                    .start()
+            } else {
+                target.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(120)
+                    .start()
+            }
+        }
+    }
+
+    private fun setupSecondaryCardFocus(view: LinearLayout) {
+        view.setOnFocusChangeListener { target, hasFocus ->
+            if (hasFocus) {
+                target.animate()
+                    .scaleX(1.02f)
+                    .scaleY(1.02f)
+                    .setDuration(120)
+                    .start()
+            } else {
+                target.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(120)
+                    .start()
+            }
+        }
+    }
+
+    private fun setEnterAction(view: LinearLayout, action: () -> Unit) {
+        view.setOnKeyListener { _, keyCode, event ->
             if (
                 event.action == KeyEvent.ACTION_DOWN &&
                 (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
             ) {
-                // Más adelante abrir canales
+                action()
                 true
             } else {
                 false
-            }
-        }
-
-        btnLogout.setOnKeyListener { _, keyCode, event ->
-            if (
-                event.action == KeyEvent.ACTION_DOWN &&
-                (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
-            ) {
-                sessionManager.clearSession()
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
-                true
-            } else {
-                false
-            }
-        }
-
-        btnGoChannels.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                view.animate().scaleX(1.05f).scaleY(1.05f).setDuration(120).start()
-            } else {
-                view.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
-            }
-        }
-
-        btnLogout.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                view.animate().scaleX(1.05f).scaleY(1.05f).setDuration(120).start()
-            } else {
-                view.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
             }
         }
     }

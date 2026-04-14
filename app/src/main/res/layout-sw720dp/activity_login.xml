@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#05070D">
+    android:background="@drawable/bg_app_image">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_horizontal"
-            android:layout_marginBottom="18dp">
+            android:layout_marginBottom="20dp">
 
             <TextView
                 android:id="@+id/txtBrand"
@@ -28,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:text="wish.net TV"
                 android:textColor="#E50914"
-                android:textSize="24sp"
+                android:textSize="28sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.03" />
 
@@ -36,41 +36,41 @@
                 android:id="@+id/txtSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="5dp"
                 android:text="Tu plataforma de TV en vivo"
                 android:textColor="#9CA3AF"
-                android:textSize="11sp" />
+                android:textSize="12sp" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="300dp"
+            android:layout_width="340dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="#141922"
-            android:padding="16dp">
+            android:padding="20dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Iniciar sesión"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="14dp" />
 
             <EditText
                 android:id="@+id/email"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginBottom="8dp"
+                android:layout_height="44dp"
+                android:layout_marginBottom="10dp"
                 android:background="@drawable/tv_input_selector"
                 android:hint="Correo electrónico"
                 android:inputType="textEmailAddress"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#6B7280"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:nextFocusDown="@id/password" />
@@ -78,16 +78,16 @@
             <EditText
                 android:id="@+id/password"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginBottom="8dp"
+                android:layout_height="44dp"
+                android:layout_marginBottom="10dp"
                 android:background="@drawable/tv_input_selector"
                 android:hint="Contraseña"
                 android:inputType="textPassword"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#6B7280"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:nextFocusUp="@id/email"
@@ -97,11 +97,11 @@
                 android:id="@+id/txtError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="10dp"
                 android:layout_gravity="center"
                 android:text=""
                 android:textColor="#F87171"
-                android:textSize="10sp"
+                android:textSize="12sp"
                 android:gravity="center"
                 android:textAlignment="center"
                 android:visibility="gone" />
@@ -109,12 +109,12 @@
             <Button
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:background="@drawable/tv_button_selector"
                 android:text="Ingresar"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
@@ -125,7 +125,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:visibility="gone" />
         </LinearLayout>
 

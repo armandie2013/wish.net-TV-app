@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape>
+            <gradient
+                android:startColor="#CC040816"
+                android:endColor="#00040816"
+                android:angle="0" />
+        </shape>
+    </item>
+    <item>
+        <bitmap
+            android:src="@drawable/bg_app_image"
+            android:gravity="fill" />
+    </item>
+
+    <item>
+        <shape>
+            <solid android:color="#AA040816" />
+        </shape>
+    </item>
+
+</layer-list>

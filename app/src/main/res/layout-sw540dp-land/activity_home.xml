@@ -3,110 +3,335 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#05070D">
+    android:background="@drawable/bg_app_image"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingLeft="60dp"
-        android:paddingRight="60dp"
-        android:paddingTop="28dp"
-        android:paddingBottom="28dp">
+        android:paddingLeft="36dp"
+        android:paddingTop="20dp"
+        android:paddingRight="36dp"
+        android:paddingBottom="20dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <!-- TÍTULO -->
-        <TextView
-            android:id="@+id/txtWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bienvenida"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/txtHomeSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Tu acceso a wish.net TV está listo."
-            android:textColor="#9CA3AF"
-            android:textSize="15sp" />
-
-        <!-- CARD ESTADO -->
+        <!-- HEADER -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:orientation="vertical"
-            android:background="#141922"
-            android:padding="20dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <TextView
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtWelcome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bienvenida"
+                    android:textColor="#FFFFFF"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtHomeSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Tu acceso a wish.net TV está listo."
+                    android:textColor="#94A3B8"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Estado de la cuenta"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:orientation="vertical"
+                android:gravity="end">
 
-            <TextView
-                android:id="@+id/txtStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Sesión activa"
-                android:textColor="#86EFAC"
-                android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/txtStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sesión activa"
+                    android:textColor="#86EFAC"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/txtUserInfo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Ya podés continuar al catálogo de canales"
-                android:textColor="#D1D5DB"
-                android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/txtUserInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Listo para continuar"
+                    android:textColor="#CBD5E1"
+                    android:textSize="12sp" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- BOTONES -->
+        <!-- GRID -->
         <LinearLayout
-            android:layout_width="360dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:orientation="vertical"
-            android:background="#141922"
-            android:padding="18dp">
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
-            <!-- VER CANALES -->
-            <Button
-                android:id="@+id/btnGoChannels"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@drawable/tv_button_selector"
-                android:text="Ver canales"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:nextFocusDown="@id/btnLogout" />
+            <!-- CARD GRANDE -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:layout_marginRight="12dp">
 
-            <!-- LOGOUT -->
-            <Button
-                android:id="@+id/btnLogout"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/tv_button_secondary_selector"
-                android:text="Cerrar sesión"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:nextFocusUp="@id/btnGoChannels" />
+                <LinearLayout
+                    android:id="@+id/cardLiveTv"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/tv_home_primary_selector"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:nextFocusRight="@id/cardCategories"
+                    android:orientation="vertical"
+                    android:padding="22dp">
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TV EN VIVO"
+                        android:textColor="#FFFFFF"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Accedé al catálogo de canales y comenzá a reproducir contenido en vivo."
+                        android:textColor="#E2E8F0"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="Abrir catálogo"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- COLUMNA DERECHA -->
+            <LinearLayout
+                android:layout_width="360dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <!-- FILA 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <!-- CATEGORIAS -->
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="4dp"
+                        android:layout_marginRight="6dp">
+
+                        <LinearLayout
+                            android:id="@+id/cardCategories"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/tv_home_secondary_selector"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusLeft="@id/cardLiveTv"
+                            android:nextFocusRight="@id/cardFavorites"
+                            android:nextFocusDown="@id/cardAccount"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <Space
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="CATEGORÍAS"
+                                android:textColor="#FFFFFF"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Explorar"
+                                android:textColor="#CBD5E1"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <!-- FAVORITOS -->
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="4dp"
+                        android:layout_marginLeft="6dp">
+
+                        <LinearLayout
+                            android:id="@+id/cardFavorites"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/tv_home_secondary_selector"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusLeft="@id/cardCategories"
+                            android:nextFocusDown="@id/cardLogout"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <Space
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="FAVORITOS"
+                                android:textColor="#FFFFFF"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Acceso rápido"
+                                android:textColor="#CBD5E1"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- FILA 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <!-- MI CUENTA -->
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="4dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginRight="6dp">
+
+                        <LinearLayout
+                            android:id="@+id/cardAccount"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/tv_home_secondary_selector"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusUp="@id/cardCategories"
+                            android:nextFocusLeft="@id/cardLiveTv"
+                            android:nextFocusRight="@id/cardLogout"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <Space
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="MI CUENTA"
+                                android:textColor="#FFFFFF"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Estado y sesión"
+                                android:textColor="#CBD5E1"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <!-- LOGOUT -->
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="4dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginLeft="6dp">
+
+                        <LinearLayout
+                            android:id="@+id/cardLogout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/tv_home_logout_selector"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusUp="@id/cardFavorites"
+                            android:nextFocusLeft="@id/cardAccount"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <Space
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="CERRAR SESIÓN"
+                                android:textColor="#FFFFFF"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Salir de la cuenta"
+                                android:textColor="#FECACA"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>
