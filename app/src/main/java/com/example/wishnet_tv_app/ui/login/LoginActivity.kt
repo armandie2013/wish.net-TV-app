@@ -2,14 +2,17 @@ package com.example.wishnet_tv_app.ui.login
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.util.Patterns
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -33,14 +36,18 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var errorText: TextView
     private lateinit var sessionManager: SessionManager
+    private lateinit var loginFormContainer: LinearLayout
+
+    private var keyboardLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         window.setSoftInputMode(
             WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN or
-                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
         )
+
         setContentView(R.layout.activity_login)
 
         sessionManager = SessionManager(this)
@@ -50,10 +57,12 @@ class LoginActivity : AppCompatActivity() {
         loginButton = findViewById(R.id.btnLogin)
         progressBar = findViewById(R.id.progressLogin)
         errorText = findViewById(R.id.txtError)
+        loginFormContainer = findViewById(R.id.loginFormContainer)
 
         loginButton.requestFocus()
 
-        // 🔥 EFECTO FOCO (ZOOM SUAVE)
+        setupKeyboardAwareForm()
+
         loginButton.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
                 view.animate()
@@ -99,6 +108,33 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupKeyboardAwareForm() {
+        val rootView = findViewById<View>(android.R.id.content)
+
+        keyboardLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+            val rect = Rect()
+            rootView.getWindowVisibleDisplayFrame(rect)
+
+            val screenHeight = rootView.rootView.height
+            val keypadHeight = screenHeight - rect.bottom
+            val keyboardVisible = keypadHeight > screenHeight * 0.15
+
+            if (keyboardVisible) {
+                loginFormContainer.animate()
+                    .translationY(-240f)
+                    .setDuration(180)
+                    .start()
+            } else {
+                loginFormContainer.animate()
+                    .translationY(0f)
+                    .setDuration(180)
+                    .start()
+            }
+        }
+
+        rootView.viewTreeObserver.addOnGlobalLayoutListener(keyboardLayoutListener)
+    }
+
     private fun attemptLogin() {
         val email = emailEditText.text.toString().trim()
         val password = passwordEditText.text.toString().trim()
@@ -116,12 +152,9 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        // Quitar foco de los campos y dejarlo en el botón
         emailEditText.clearFocus()
         passwordEditText.clearFocus()
         loginButton.requestFocus()
-
-        // Ocultar teclado
         hideKeyboard()
 
         setLoading(true)
@@ -175,15 +208,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setLoading(isLoading: Boolean) {
-        // Botón
         loginButton.isEnabled = !isLoading
         loginButton.text = if (isLoading) "Ingresando..." else "Ingresar"
 
-        // Inputs (bloqueo mientras carga)
         emailEditText.isEnabled = !isLoading
         passwordEditText.isEnabled = !isLoading
 
-        // Loader
         progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
@@ -196,5 +226,13 @@ class LoginActivity : AppCompatActivity() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: loginButton
         imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    override fun onDestroy() {
+        val rootView = findViewById<View>(android.R.id.content)
+        keyboardLayoutListener?.let {
+            rootView.viewTreeObserver.removeOnGlobalLayoutListener(it)
+        }
+        super.onDestroy()
     }
 }

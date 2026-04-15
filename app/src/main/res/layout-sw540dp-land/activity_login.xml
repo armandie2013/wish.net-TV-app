@@ -3,17 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Fondo -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:src="@drawable/bg_app_image" />
 
+    <!-- Overlay -->
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#AA05070D" />
 
+    <!-- Contenido -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -31,6 +34,7 @@
             android:paddingTop="24dp"
             android:paddingBottom="24dp">
 
+            <!-- Logo -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -45,8 +49,7 @@
                     android:text="wish.net TV"
                     android:textColor="#E50914"
                     android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.03" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/txtSubtitle"
@@ -58,7 +61,9 @@
                     android:textSize="11sp" />
             </LinearLayout>
 
+            <!-- FORMULARIO -->
             <LinearLayout
+                android:id="@+id/loginFormContainer"
                 android:layout_width="320dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -86,10 +91,7 @@
                     android:paddingRight="10dp"
                     android:textColor="#FFFFFF"
                     android:textColorHint="#6B7280"
-                    android:textSize="12sp"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:nextFocusDown="@id/password" />
+                    android:textSize="12sp" />
 
                 <EditText
                     android:id="@+id/password"
@@ -103,11 +105,7 @@
                     android:paddingRight="10dp"
                     android:textColor="#FFFFFF"
                     android:textColorHint="#6B7280"
-                    android:textSize="12sp"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:nextFocusUp="@id/email"
-                    android:nextFocusDown="@id/btnLogin" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/txtError"
@@ -118,7 +116,6 @@
                     android:textColor="#F87171"
                     android:textSize="11sp"
                     android:gravity="center"
-                    android:textAlignment="center"
                     android:visibility="gone" />
 
                 <Button
@@ -127,13 +124,8 @@
                     android:layout_height="42dp"
                     android:background="@drawable/tv_button_selector"
                     android:text="Ingresar"
-                    android:textAllCaps="false"
                     android:textColor="#FFFFFF"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:nextFocusUp="@id/password" />
+                    android:textAllCaps="false" />
 
                 <ProgressBar
                     android:id="@+id/progressLogin"

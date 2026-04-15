@@ -30,7 +30,7 @@
             android:name=".ui.login.LoginActivity"
             android:exported="false"
             android:theme="@style/Theme.WishnetTVapp"
-            android:windowSoftInputMode="stateHidden|adjustResize" />
+            android:windowSoftInputMode="stateHidden|adjustNothing" />
 
         <!-- CHANGE PASSWORD -->
         <activity
