@@ -32,6 +32,16 @@
             android:theme="@style/Theme.WishnetTVapp"
             android:windowSoftInputMode="stateHidden|adjustNothing" />
 
+        <activity
+            android:name=".ui.login.LoginEmailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WishnetTVapp" />
+
+        <activity
+            android:name=".ui.login.LoginPasswordActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WishnetTVapp" />
+
         <!-- CHANGE PASSWORD -->
         <activity
             android:name=".ui.password.ChangePasswordActivity"
