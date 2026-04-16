@@ -3,8 +3,8 @@ package com.example.wishnet_tv_app.ui.password
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -23,8 +23,8 @@ import kotlinx.coroutines.withContext
 class ChangePasswordStep2Activity : AppCompatActivity() {
 
     private lateinit var confirmPasswordEditText: EditText
-    private lateinit var saveButton: Button
-    private lateinit var backButton: Button
+    private lateinit var saveButton: TextView
+    private lateinit var backButton: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var errorText: TextView
     private lateinit var sessionManager: SessionManager
@@ -73,7 +73,7 @@ class ChangePasswordStep2Activity : AppCompatActivity() {
         val confirmPassword = confirmPasswordEditText.text.toString().trim()
 
         errorText.text = ""
-        errorText.visibility = TextView.GONE
+        errorText.visibility = View.GONE
 
         if (newPassword.isEmpty()) {
             showError("No se encontró la nueva contraseña")
@@ -126,12 +126,12 @@ class ChangePasswordStep2Activity : AppCompatActivity() {
         saveButton.isEnabled = !isLoading
         backButton.isEnabled = !isLoading
         confirmPasswordEditText.isEnabled = !isLoading
-        progressBar.visibility = if (isLoading) ProgressBar.VISIBLE else ProgressBar.GONE
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         saveButton.text = if (isLoading) "Guardando..." else "Guardar contraseña"
     }
 
     private fun showError(message: String) {
         errorText.text = message
-        errorText.visibility = TextView.VISIBLE
+        errorText.visibility = View.VISIBLE
     }
 }

@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -27,8 +27,8 @@ class LoginPasswordActivity : AppCompatActivity() {
 
     private lateinit var emailText: TextView
     private lateinit var passwordEditText: EditText
-    private lateinit var loginButton: Button
-    private lateinit var changeEmailButton: Button
+    private lateinit var loginButton: TextView
+    private lateinit var changeEmailButton: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var errorText: TextView
     private lateinit var sessionManager: SessionManager
@@ -42,7 +42,6 @@ class LoginPasswordActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login_password)
 
         sessionManager = SessionManager(this)
-
         email = intent.getStringExtra("email")?.trim().orEmpty()
 
         emailText = findViewById(R.id.txtEmailValue)
@@ -53,40 +52,9 @@ class LoginPasswordActivity : AppCompatActivity() {
         errorText = findViewById(R.id.txtError)
 
         emailText.text = email
-
         loginButton.requestFocus()
 
-        loginButton.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                view.animate()
-                    .scaleX(1.05f)
-                    .scaleY(1.05f)
-                    .setDuration(120)
-                    .start()
-            } else {
-                view.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(120)
-                    .start()
-            }
-        }
 
-        changeEmailButton.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                view.animate()
-                    .scaleX(1.03f)
-                    .scaleY(1.03f)
-                    .setDuration(120)
-                    .start()
-            } else {
-                view.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(120)
-                    .start()
-            }
-        }
 
         loginButton.setOnClickListener {
             attemptLogin()
@@ -125,7 +93,7 @@ class LoginPasswordActivity : AppCompatActivity() {
         val password = passwordEditText.text.toString().trim()
 
         errorText.text = ""
-        errorText.visibility = TextView.GONE
+        errorText.visibility = View.GONE
 
         if (email.isEmpty()) {
             showError("No se encontró el correo electrónico")
@@ -144,12 +112,7 @@ class LoginPasswordActivity : AppCompatActivity() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = ApiClient.api.login(
-                    LoginRequest(
-                        email = email,
-                        password = password
-                    )
-                )
+                val response = ApiClient.api.login(LoginRequest(email = email, password = password))
 
                 withContext(Dispatchers.Main) {
                     setLoading(false)
@@ -194,14 +157,13 @@ class LoginPasswordActivity : AppCompatActivity() {
         loginButton.isEnabled = !isLoading
         changeEmailButton.isEnabled = !isLoading
         passwordEditText.isEnabled = !isLoading
-
         loginButton.text = if (isLoading) "Ingresando..." else "Ingresar"
-        progressBar.visibility = if (isLoading) ProgressBar.VISIBLE else ProgressBar.GONE
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun showError(message: String) {
         errorText.text = message
-        errorText.visibility = TextView.VISIBLE
+        errorText.visibility = View.VISIBLE
     }
 
     private fun hideKeyboard() {

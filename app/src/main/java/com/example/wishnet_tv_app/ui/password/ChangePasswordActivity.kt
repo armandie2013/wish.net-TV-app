@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -25,7 +24,7 @@ class ChangePasswordActivity : AppCompatActivity() {
 
     private lateinit var newPasswordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
-    private lateinit var saveButton: Button
+    private lateinit var saveButton: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var errorText: TextView
     private lateinit var sessionManager: SessionManager
@@ -34,7 +33,7 @@ class ChangePasswordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
-        setContentView(R.layout.activity_change_password)
+        setContentView(R.layout.activity_change_password_step1)
 
         sessionManager = SessionManager(this)
 

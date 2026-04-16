@@ -17,18 +17,18 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
         android:orientation="vertical"
-        android:paddingLeft="60dp"
+        android:gravity="center"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
         android:paddingTop="24dp"
-        android:paddingRight="60dp"
         android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="320dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/tv_card_bg"
             android:orientation="vertical"
+            android:background="@drawable/tv_card_bg"
             android:padding="18dp">
 
             <TextView
@@ -47,8 +47,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"
-                android:layout_marginBottom="10dp"
-                android:text="Creá una nueva contraseña"
+                android:layout_marginBottom="14dp"
+                android:text="Ingresá tu correo para continuar"
                 android:textColor="#9CA3AF"
                 android:textSize="11sp" />
 
@@ -56,29 +56,29 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="Nueva contraseña"
+                android:text="Correo electrónico"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <EditText
-                android:id="@+id/edtNewPassword"
+                android:id="@+id/email"
                 android:layout_width="match_parent"
                 android:layout_height="42dp"
                 android:layout_marginBottom="10dp"
                 android:background="@drawable/tv_input_selector"
-                android:defaultFocusHighlightEnabled="false"
-                android:hint="Nueva contraseña"
-                android:inputType="textPassword"
+                android:hint="usuario@correo.com"
+                android:inputType="textEmailAddress"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
-                android:stateListAnimator="@null"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#6B7280"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:defaultFocusHighlightEnabled="false"
+                android:stateListAnimator="@null" />
 
             <TextView
-                android:id="@+id/txtPasswordError"
+                android:id="@+id/txtError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"

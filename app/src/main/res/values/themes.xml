@@ -5,5 +5,7 @@
         <item name="colorPrimary">#000000</item>
         <item name="colorPrimaryDark">#000000</item>
         <item name="colorAccent">#FFFFFF</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+        <item name="android:colorControlHighlight">@android:color/transparent</item>
     </style>
 </resources>

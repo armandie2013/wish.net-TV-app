@@ -7,7 +7,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wishnet_tv_app.R
-import com.example.wishnet_tv_app.ui.login.LoginActivity
+import com.example.wishnet_tv_app.ui.login.LoginEmailActivity
 import com.example.wishnet_tv_app.utils.SessionManager
 
 class HomeActivity : AppCompatActivity() {
@@ -44,7 +44,7 @@ class HomeActivity : AppCompatActivity() {
         val userName = sessionManager.getUserName() ?: "Usuario"
         val token = sessionManager.getToken()
 
-        welcomeText.text = "Bienvenida, $userName"
+        welcomeText.text = "Hola, $userName"
         subtitleText.text = "Tu acceso a wish.net TV está listo."
 
         statusText.text = if (token.isNullOrEmpty()) {
@@ -61,11 +61,11 @@ class HomeActivity : AppCompatActivity() {
 
         cardLiveTv.requestFocus()
 
-        setupPrimaryCardFocus(cardLiveTv)
-        setupSecondaryCardFocus(cardCategories)
-        setupSecondaryCardFocus(cardFavorites)
-        setupSecondaryCardFocus(cardAccount)
-        setupSecondaryCardFocus(cardLogout)
+        setupCardFocus(cardLiveTv, 1.01f)
+        setupCardFocus(cardCategories, 1.02f)
+        setupCardFocus(cardFavorites, 1.02f)
+        setupCardFocus(cardAccount, 1.02f)
+        setupCardFocus(cardLogout, 1.02f)
 
         cardLiveTv.setOnClickListener {
             // Próximo paso: abrir catálogo real de canales
@@ -84,46 +84,28 @@ class HomeActivity : AppCompatActivity() {
         }
 
         cardLogout.setOnClickListener {
-            sessionManager.clearSession()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            logout()
         }
 
         setEnterAction(cardLiveTv) { }
         setEnterAction(cardCategories) { }
         setEnterAction(cardFavorites) { }
         setEnterAction(cardAccount) { }
-        setEnterAction(cardLogout) {
-            sessionManager.clearSession()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-        }
+        setEnterAction(cardLogout) { logout() }
     }
 
-    private fun setupPrimaryCardFocus(view: LinearLayout) {
+    private fun logout() {
+        sessionManager.clearSession()
+        startActivity(Intent(this, LoginEmailActivity::class.java))
+        finish()
+    }
+
+    private fun setupCardFocus(view: LinearLayout, scale: Float) {
         view.setOnFocusChangeListener { target, hasFocus ->
             if (hasFocus) {
                 target.animate()
-                    .scaleX(1.01f)
-                    .scaleY(1.01f)
-                    .setDuration(120)
-                    .start()
-            } else {
-                target.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(120)
-                    .start()
-            }
-        }
-    }
-
-    private fun setupSecondaryCardFocus(view: LinearLayout) {
-        view.setOnFocusChangeListener { target, hasFocus ->
-            if (hasFocus) {
-                target.animate()
-                    .scaleX(1.02f)
-                    .scaleY(1.02f)
+                    .scaleX(scale)
+                    .scaleY(scale)
                     .setDuration(120)
                     .start()
             } else {

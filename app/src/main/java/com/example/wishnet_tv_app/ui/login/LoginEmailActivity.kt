@@ -4,8 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.view.KeyEvent
+import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +14,7 @@ import com.example.wishnet_tv_app.R
 class LoginEmailActivity : AppCompatActivity() {
 
     private lateinit var emailEditText: EditText
-    private lateinit var continueButton: Button
+    private lateinit var continueButton: TextView
     private lateinit var errorText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,21 +33,7 @@ class LoginEmailActivity : AppCompatActivity() {
             goToPasswordStep()
         }
 
-        continueButton.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                view.animate()
-                    .scaleX(1.05f)
-                    .scaleY(1.05f)
-                    .setDuration(120)
-                    .start()
-            } else {
-                view.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(120)
-                    .start()
-            }
-        }
+
 
         emailEditText.setOnKeyListener { _, keyCode, event ->
             if (
@@ -78,7 +64,7 @@ class LoginEmailActivity : AppCompatActivity() {
         val email = emailEditText.text.toString().trim()
 
         errorText.text = ""
-        errorText.visibility = TextView.GONE
+        errorText.visibility = View.GONE
 
         if (email.isEmpty()) {
             showError("Ingresá tu correo electrónico")
@@ -97,6 +83,6 @@ class LoginEmailActivity : AppCompatActivity() {
 
     private fun showError(message: String) {
         errorText.text = message
-        errorText.visibility = TextView.VISIBLE
+        errorText.visibility = View.VISIBLE
     }
 }

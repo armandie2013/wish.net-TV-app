@@ -3,8 +3,8 @@ package com.example.wishnet_tv_app.ui.password
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +13,7 @@ import com.example.wishnet_tv_app.R
 class ChangePasswordStep1Activity : AppCompatActivity() {
 
     private lateinit var passwordEditText: EditText
-    private lateinit var continueButton: Button
+    private lateinit var continueButton: TextView
     private lateinit var errorText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,21 +32,7 @@ class ChangePasswordStep1Activity : AppCompatActivity() {
             goToStep2()
         }
 
-        continueButton.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                view.animate()
-                    .scaleX(1.05f)
-                    .scaleY(1.05f)
-                    .setDuration(120)
-                    .start()
-            } else {
-                view.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(120)
-                    .start()
-            }
-        }
+
 
         passwordEditText.setOnKeyListener { _, keyCode, event ->
             if (
@@ -77,7 +63,7 @@ class ChangePasswordStep1Activity : AppCompatActivity() {
         val password = passwordEditText.text.toString().trim()
 
         errorText.text = ""
-        errorText.visibility = TextView.GONE
+        errorText.visibility = View.GONE
 
         if (password.isEmpty()) {
             showError("Ingresá una nueva contraseña")
@@ -91,6 +77,6 @@ class ChangePasswordStep1Activity : AppCompatActivity() {
 
     private fun showError(message: String) {
         errorText.text = message
-        errorText.visibility = TextView.VISIBLE
+        errorText.visibility = View.VISIBLE
     }
 }
