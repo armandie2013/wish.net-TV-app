@@ -25,13 +25,6 @@
             android:exported="false"
             android:theme="@style/Theme.WishnetTVapp" />
 
-        <!-- LOGIN -->
-        <activity
-            android:name=".ui.login.LoginActivity"
-            android:exported="false"
-            android:theme="@style/Theme.WishnetTVapp"
-            android:windowSoftInputMode="stateHidden|adjustNothing" />
-
         <activity
             android:name=".ui.login.LoginEmailActivity"
             android:exported="false"
@@ -42,12 +35,15 @@
             android:exported="false"
             android:theme="@style/Theme.WishnetTVapp" />
 
-        <!-- CHANGE PASSWORD -->
         <activity
-            android:name=".ui.password.ChangePasswordActivity"
+            android:name=".ui.password.ChangePasswordStep1Activity"
             android:exported="false"
-            android:theme="@style/Theme.WishnetTVapp"
-            android:windowSoftInputMode="stateHidden|adjustResize" />
+            android:theme="@style/Theme.WishnetTVapp" />
+
+        <activity
+            android:name=".ui.password.ChangePasswordStep2Activity"
+            android:exported="false"
+            android:theme="@style/Theme.WishnetTVapp" />
 
         <activity
             android:name=".MainActivity"

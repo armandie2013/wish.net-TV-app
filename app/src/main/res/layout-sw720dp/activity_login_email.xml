@@ -19,79 +19,61 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingLeft="60dp"
-        android:paddingRight="60dp"
+        android:paddingLeft="80dp"
+        android:paddingRight="80dp"
         android:paddingTop="24dp"
         android:paddingBottom="24dp">
 
         <LinearLayout
-            android:layout_width="320dp"
+            android:layout_width="340dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="#141922"
-            android:padding="18dp">
+            android:padding="20dp">
 
             <TextView
                 android:id="@+id/txtBrand"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
                 android:text="wish.net TV"
                 android:textColor="#E50914"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_horizontal" />
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txtSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="14dp"
-                android:text="Ingresá tu contraseña para continuar"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="16dp"
+                android:text="Ingresá tu correo para continuar"
                 android:textColor="#9CA3AF"
-                android:textSize="11sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Correo"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/txtEmailValue"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="12dp"
-                android:text="usuario@correo.com"
-                android:textColor="#CBD5E1"
                 android:textSize="12sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Contraseña"
+                android:text="Correo electrónico"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
 
             <EditText
-                android:id="@+id/password"
+                android:id="@+id/email"
                 android:layout_width="match_parent"
-                android:layout_height="42dp"
+                android:layout_height="44dp"
                 android:layout_marginBottom="10dp"
                 android:background="@drawable/tv_input_selector"
-                android:hint="Contraseña"
-                android:inputType="textPassword"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
+                android:hint="usuario@correo.com"
+                android:inputType="textEmailAddress"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#6B7280"
-                android:textSize="12sp" />
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/txtError"
@@ -100,40 +82,21 @@
                 android:layout_marginBottom="10dp"
                 android:text=""
                 android:textColor="#F87171"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:gravity="center"
                 android:textAlignment="center"
                 android:visibility="gone" />
 
             <Button
-                android:id="@+id/btnLogin"
+                android:id="@+id/btnContinue"
                 android:layout_width="match_parent"
-                android:layout_height="42dp"
+                android:layout_height="44dp"
                 android:background="@drawable/tv_button_selector"
-                android:text="Ingresar"
+                android:text="Continuar"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
                 android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnChangeEmail"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="10dp"
-                android:backgroundTint="#1F2937"
-                android:text="Cambiar correo"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-            <ProgressBar
-                android:id="@+id/progressLogin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>
