@@ -7,16 +7,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wishnet_tv_app.R
-import com.example.wishnet_tv_app.ui.login.LoginEmailActivity
-import com.example.wishnet_tv_app.utils.SessionManager
+import com.example.wishnet_tv_app.ui.live.LiveTvPlayerActivity
 
 class HomeActivity : AppCompatActivity() {
 
-    private lateinit var sessionManager: SessionManager
-    private lateinit var welcomeText: TextView
-    private lateinit var subtitleText: TextView
-    private lateinit var statusText: TextView
-    private lateinit var userInfoText: TextView
+    private lateinit var txtWelcome: TextView
+    private lateinit var txtHomeSubtitle: TextView
+    private lateinit var txtStatus: TextView
+    private lateinit var txtUserInfo: TextView
 
     private lateinit var cardLiveTv: LinearLayout
     private lateinit var cardCategories: LinearLayout
@@ -28,107 +26,61 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        sessionManager = SessionManager(this)
+        bindViews()
+        setupUI()
+        setupActions()
+    }
 
-        welcomeText = findViewById(R.id.txtWelcome)
-        subtitleText = findViewById(R.id.txtHomeSubtitle)
-        statusText = findViewById(R.id.txtStatus)
-        userInfoText = findViewById(R.id.txtUserInfo)
+    private fun bindViews() {
+        txtWelcome = findViewById(R.id.txtWelcome)
+        txtHomeSubtitle = findViewById(R.id.txtHomeSubtitle)
+        txtStatus = findViewById(R.id.txtStatus)
+        txtUserInfo = findViewById(R.id.txtUserInfo)
 
         cardLiveTv = findViewById(R.id.cardLiveTv)
         cardCategories = findViewById(R.id.cardCategories)
         cardFavorites = findViewById(R.id.cardFavorites)
         cardAccount = findViewById(R.id.cardAccount)
         cardLogout = findViewById(R.id.cardLogout)
+    }
 
-        val userName = sessionManager.getUserName() ?: "Usuario"
-        val token = sessionManager.getToken()
+    private fun setupUI() {
+        txtWelcome.text = "Bienvenido"
+        txtHomeSubtitle.text = "Tu acceso a wish.net TV está listo"
+        txtStatus.text = "Sesión activa"
+        txtUserInfo.text = "Listo para continuar"
 
-        welcomeText.text = "Hola, $userName"
-        subtitleText.text = "Tu acceso a wish.net TV está listo."
-
-        statusText.text = if (token.isNullOrEmpty()) {
-            "Sesión no encontrada"
-        } else {
-            "Sesión activa"
-        }
-
-        userInfoText.text = if (token.isNullOrEmpty()) {
-            "No se encontraron datos de sesión"
-        } else {
-            "Ya podés continuar al catálogo de canales"
-        }
-
+        // Foco inicial en TV EN VIVO
         cardLiveTv.requestFocus()
+    }
 
-        setupCardFocus(cardLiveTv, 1.01f)
-        setupCardFocus(cardCategories, 1.02f)
-        setupCardFocus(cardFavorites, 1.02f)
-        setupCardFocus(cardAccount, 1.02f)
-        setupCardFocus(cardLogout, 1.02f)
+    private fun setupActions() {
 
+        // 👉 CLICK (mouse / touch / OK automático)
         cardLiveTv.setOnClickListener {
-            // Próximo paso: abrir catálogo real de canales
+            openLiveTv()
         }
 
-        cardCategories.setOnClickListener {
-            // Próximo paso: abrir categorías
-        }
-
-        cardFavorites.setOnClickListener {
-            // Próximo paso: abrir favoritos
-        }
-
-        cardAccount.setOnClickListener {
-            // Próximo paso: abrir cuenta
-        }
-
-        cardLogout.setOnClickListener {
-            logout()
-        }
-
-        setEnterAction(cardLiveTv) { }
-        setEnterAction(cardCategories) { }
-        setEnterAction(cardFavorites) { }
-        setEnterAction(cardAccount) { }
-        setEnterAction(cardLogout) { logout() }
-    }
-
-    private fun logout() {
-        sessionManager.clearSession()
-        startActivity(Intent(this, LoginEmailActivity::class.java))
-        finish()
-    }
-
-    private fun setupCardFocus(view: LinearLayout, scale: Float) {
-        view.setOnFocusChangeListener { target, hasFocus ->
-            if (hasFocus) {
-                target.animate()
-                    .scaleX(scale)
-                    .scaleY(scale)
-                    .setDuration(120)
-                    .start()
-            } else {
-                target.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(120)
-                    .start()
-            }
-        }
-    }
-
-    private fun setEnterAction(view: LinearLayout, action: () -> Unit) {
-        view.setOnKeyListener { _, keyCode, event ->
-            if (
-                event.action == KeyEvent.ACTION_DOWN &&
-                (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
+        // 👉 CONTROL REMOTO (OK / ENTER)
+        cardLiveTv.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN &&
+                (keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                        keyCode == KeyEvent.KEYCODE_ENTER)
             ) {
-                action()
+                openLiveTv()
                 true
             } else {
                 false
             }
         }
+
+        // 👉 LOGOUT (placeholder)
+        cardLogout.setOnClickListener {
+            finish()
+        }
+    }
+
+    private fun openLiveTv() {
+        startActivity(Intent(this, LiveTvPlayerActivity::class.java))
     }
 }

@@ -43,9 +43,15 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
+    implementation("androidx.media3:media3-exoplayer:1.10.0")
+    implementation("androidx.media3:media3-ui:1.10.0")
+
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.10.0")
+
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

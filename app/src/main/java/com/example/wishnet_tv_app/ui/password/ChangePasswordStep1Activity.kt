@@ -60,7 +60,7 @@ class ChangePasswordStep1Activity : AppCompatActivity() {
     }
 
     private fun goToStep2() {
-        val password = passwordEditText.text.toString().trim()
+        val password = passwordEditText.text.toString()
 
         errorText.text = ""
         errorText.visibility = View.GONE

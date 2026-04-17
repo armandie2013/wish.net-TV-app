@@ -45,6 +45,13 @@
             android:exported="false"
             android:theme="@style/Theme.WishnetTVapp" />
 
+        <!-- ✅ PLAYER -->
+        <activity
+            android:name=".ui.live.LiveTvPlayerActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <!-- ✅ MAIN -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -18,15 +18,15 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wishnet_tv_app.R
 import com.example.wishnet_tv_app.data.api.ApiClient
-import com.example.wishnet_tv_app.data.model.LoginRequest
 import com.example.wishnet_tv_app.ui.home.HomeActivity
-import com.example.wishnet_tv_app.ui.password.ChangePasswordActivity
 import com.example.wishnet_tv_app.utils.ApiErrorParser
 import com.example.wishnet_tv_app.utils.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.wishnet_tv_app.data.model.LoginRequest
+import com.example.wishnet_tv_app.ui.password.ChangePasswordStep1Activity
 
 class LoginActivity : AppCompatActivity() {
 
@@ -172,20 +172,21 @@ class LoginActivity : AppCompatActivity() {
                     setLoading(false)
 
                     if (response.ok && !response.token.isNullOrEmpty() && response.user != null) {
+                        android.util.Log.d("LOGIN_DEBUG", "token = ${response.token}")
                         sessionManager.saveSession(
                             token = response.token,
                             userId = response.user.id,
                             nombre = response.user.nombre,
                             email = response.user.email,
                             rol = response.user.rol,
-                            localidad = response.user.localidad
+                            localidad = response.user.localidad ?: "principal"
                         )
-
+                        android.util.Log.d("LOGIN_DEBUG", "saved token = ${sessionManager.getToken()}")
                         if (response.mustChangePassword) {
                             startActivity(
                                 Intent(
                                     this@LoginActivity,
-                                    ChangePasswordActivity::class.java
+                                    ChangePasswordStep1Activity::class.java
                                 )
                             )
                             finish()

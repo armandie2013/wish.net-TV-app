@@ -9,13 +9,13 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.wishnet_tv_app.R
 import com.example.wishnet_tv_app.data.api.ApiClient
 import com.example.wishnet_tv_app.data.model.ChangePasswordRequest
 import com.example.wishnet_tv_app.ui.home.HomeActivity
 import com.example.wishnet_tv_app.utils.ApiErrorParser
 import com.example.wishnet_tv_app.utils.SessionManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,7 +38,7 @@ class ChangePasswordStep2Activity : AppCompatActivity() {
         setContentView(R.layout.activity_change_password_step2)
 
         sessionManager = SessionManager(this)
-        newPassword = intent.getStringExtra("newPassword")?.trim().orEmpty()
+        newPassword = intent.getStringExtra("newPassword").orEmpty()
 
         confirmPasswordEditText = findViewById(R.id.edtConfirmPassword)
         saveButton = findViewById(R.id.btnSavePassword)
@@ -67,10 +67,22 @@ class ChangePasswordStep2Activity : AppCompatActivity() {
                 false
             }
         }
+
+        saveButton.setOnKeyListener { _, keyCode, event ->
+            if (
+                event.action == KeyEvent.ACTION_DOWN &&
+                (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DPAD_CENTER)
+            ) {
+                attemptChangePassword()
+                true
+            } else {
+                false
+            }
+        }
     }
 
     private fun attemptChangePassword() {
-        val confirmPassword = confirmPasswordEditText.text.toString().trim()
+        val confirmPassword = confirmPasswordEditText.text.toString()
 
         errorText.text = ""
         errorText.visibility = View.GONE
@@ -93,10 +105,10 @@ class ChangePasswordStep2Activity : AppCompatActivity() {
 
         setLoading(true)
 
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val response = ApiClient.api.changePassword(
-                    authorization = "Bearer $token",
+                    token = "Bearer $token",
                     request = ChangePasswordRequest(
                         password = newPassword,
                         confirmPassword = confirmPassword
@@ -107,8 +119,10 @@ class ChangePasswordStep2Activity : AppCompatActivity() {
                     setLoading(false)
 
                     if (response.ok) {
-                        startActivity(Intent(this@ChangePasswordStep2Activity, HomeActivity::class.java))
-                        finish()
+                        startActivity(
+                            Intent(this@ChangePasswordStep2Activity, HomeActivity::class.java)
+                        )
+                        finishAffinity()
                     } else {
                         showError(response.message ?: "Error al cambiar contraseña")
                     }

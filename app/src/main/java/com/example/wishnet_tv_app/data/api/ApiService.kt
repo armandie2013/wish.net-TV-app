@@ -1,23 +1,38 @@
 package com.example.wishnet_tv_app.data.api
 
-import com.example.wishnet_tv_app.data.model.BasicResponse
 import com.example.wishnet_tv_app.data.model.ChangePasswordRequest
+import com.example.wishnet_tv_app.data.model.ChangePasswordResponse
+import com.example.wishnet_tv_app.data.model.LiveResponse
 import com.example.wishnet_tv_app.data.model.LoginRequest
 import com.example.wishnet_tv_app.data.model.LoginResponse
+import com.example.wishnet_tv_app.data.model.PlayResponse
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface ApiService {
 
-    @POST("api/app/login")
+    @POST("/api/app/login")
     suspend fun login(
         @Body request: LoginRequest
     ): LoginResponse
 
-    @POST("api/app/change-password")
+    @POST("/api/app/change-password")
     suspend fun changePassword(
-        @Header("Authorization") authorization: String,
+        @Header("Authorization") token: String,
         @Body request: ChangePasswordRequest
-    ): BasicResponse
+    ): ChangePasswordResponse
+
+    @GET("/api/app/live")
+    suspend fun getLive(
+        @Header("Authorization") token: String
+    ): LiveResponse
+
+    @GET("/api/app/channel/{id}/play")
+    suspend fun getPlay(
+        @Path("id") channelId: String,
+        @Header("Authorization") token: String
+    ): PlayResponse
 }
