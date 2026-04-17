@@ -90,7 +90,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_margin="4dp"
-                android:layout_marginRight="12dp">
+                android:layout_marginRight="12dp"
+                android:elevation="6dp">
 
                 <LinearLayout
                     android:id="@+id/cardLiveTv"
@@ -154,18 +155,16 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:layout_margin="4dp"
-                        android:layout_marginRight="6dp">
+                        android:layout_marginRight="6dp"
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardCategories"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/tv_home_secondary_selector"
+                            android:background="@drawable/tv_card_glass_selector"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
-                            android:nextFocusLeft="@id/cardLiveTv"
-                            android:nextFocusRight="@id/cardFavorites"
-                            android:nextFocusDown="@id/cardAccount"
                             android:orientation="vertical"
                             android:padding="16dp">
 
@@ -197,17 +196,16 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:layout_margin="4dp"
-                        android:layout_marginLeft="6dp">
+                        android:layout_marginLeft="6dp"
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardFavorites"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/tv_home_secondary_selector"
+                            android:background="@drawable/tv_card_glass_selector"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
-                            android:nextFocusLeft="@id/cardCategories"
-                            android:nextFocusDown="@id/cardLogout"
                             android:orientation="vertical"
                             android:padding="16dp">
 
@@ -248,18 +246,16 @@
                         android:layout_weight="1"
                         android:layout_margin="4dp"
                         android:layout_marginTop="10dp"
-                        android:layout_marginRight="6dp">
+                        android:layout_marginRight="6dp"
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardAccount"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/tv_home_secondary_selector"
+                            android:background="@drawable/tv_card_glass_selector"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
-                            android:nextFocusUp="@id/cardCategories"
-                            android:nextFocusLeft="@id/cardLiveTv"
-                            android:nextFocusRight="@id/cardLogout"
                             android:orientation="vertical"
                             android:padding="16dp">
 
@@ -292,17 +288,16 @@
                         android:layout_weight="1"
                         android:layout_margin="4dp"
                         android:layout_marginTop="10dp"
-                        android:layout_marginLeft="6dp">
+                        android:layout_marginLeft="6dp"
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardLogout"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/tv_home_logout_selector"
+                            android:background="@drawable/tv_card_glass_selector"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
-                            android:nextFocusUp="@id/cardFavorites"
-                            android:nextFocusLeft="@id/cardAccount"
                             android:orientation="vertical"
                             android:padding="16dp">
 
@@ -315,7 +310,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="CERRAR SESIÓN"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#F87171"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
 
@@ -323,7 +318,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Salir de la cuenta"
-                                android:textColor="#FECACA"
+                                android:textColor="#FCA5A5"
                                 android:textSize="12sp" />
                         </LinearLayout>
                     </FrameLayout>

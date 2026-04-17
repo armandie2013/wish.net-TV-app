@@ -78,19 +78,20 @@
         <!-- GRID -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="260dp"
+            android:layout_height="306dp"
             android:layout_marginTop="20dp"
-            android:orientation="horizontal"
             android:clipChildren="false"
-            android:clipToPadding="false">
+            android:clipToPadding="false"
+            android:orientation="horizontal">
 
             <!-- CARD GRANDE -->
             <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:layout_margin="4dp"
-                android:layout_marginRight="10dp">
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:elevation="6dp">
 
                 <LinearLayout
                     android:id="@+id/cardLiveTv"
@@ -142,14 +143,15 @@
                     <FrameLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
+                        android:layout_margin="4dp"
                         android:layout_weight="1"
-                        android:layout_margin="4dp">
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardCategories"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/tv_home_secondary_selector"
+                            android:background="@drawable/tv_card_glass_selector"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
                             android:orientation="vertical"
@@ -180,14 +182,15 @@
                     <FrameLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
+                        android:layout_margin="4dp"
                         android:layout_weight="1"
-                        android:layout_margin="4dp">
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardFavorites"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/tv_home_secondary_selector"
+                            android:background="@drawable/tv_card_glass_selector"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
                             android:orientation="vertical"
@@ -226,14 +229,15 @@
                     <FrameLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
+                        android:layout_margin="4dp"
                         android:layout_weight="1"
-                        android:layout_margin="4dp">
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardAccount"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/tv_home_secondary_selector"
+                            android:background="@drawable/tv_card_glass_selector"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
                             android:orientation="vertical"
@@ -264,8 +268,9 @@
                     <FrameLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
+                        android:layout_margin="4dp"
                         android:layout_weight="1"
-                        android:layout_margin="4dp">
+                        android:elevation="6dp">
 
                         <LinearLayout
                             android:id="@+id/cardLogout"
