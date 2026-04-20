@@ -1,6 +1,8 @@
 package com.example.wishnet_tv_app.ui.live
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
@@ -9,11 +11,13 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.ui.PlayerView
@@ -40,6 +44,15 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private var grid: List<LiveChannelItem> = emptyList()
     private var currentChannelIndex: Int = -1
 
+    private val uiHandler = Handler(Looper.getMainLooper())
+    private var pendingShowLoading = false
+
+    private val delayedShowLoading = Runnable {
+        if (pendingShowLoading) {
+            loadingOverlay.visibility = View.VISIBLE
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_tv_player)
@@ -55,43 +68,68 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     }
 
     private fun initializePlayer() {
-        player = ExoPlayer.Builder(this).build().also { exoPlayer ->
-            playerView.player = exoPlayer
+        if (player != null) return
 
-            exoPlayer.addListener(object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    when (playbackState) {
-                        Player.STATE_BUFFERING -> {
-                            Log.d("LiveTvPlayer", "STATE_BUFFERING")
-                            showLoadingOverlay()
-                        }
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                4000,
+                15000,
+                1800,
+                3000
+            )
+            .build()
 
-                        Player.STATE_READY -> {
-                            Log.d("LiveTvPlayer", "STATE_READY")
-                            hideLoadingOverlay()
-                        }
+        player = ExoPlayer.Builder(this)
+            .setLoadControl(loadControl)
+            .build()
+            .also { exoPlayer ->
+                playerView.player = exoPlayer
+                playerView.useController = false
+                exoPlayer.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
 
-                        Player.STATE_ENDED -> {
-                            Log.d("LiveTvPlayer", "STATE_ENDED")
-                            showLoadingOverlay()
-                        }
+                exoPlayer.addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        when (playbackState) {
+                            Player.STATE_BUFFERING -> {
+                                Log.d("LiveTvPlayer", "STATE_BUFFERING")
+                                showLoadingOverlayDelayed()
+                            }
 
-                        Player.STATE_IDLE -> {
-                            Log.d("LiveTvPlayer", "STATE_IDLE")
+                            Player.STATE_READY -> {
+                                Log.d("LiveTvPlayer", "STATE_READY")
+                                hideLoadingOverlay()
+                            }
+
+                            Player.STATE_ENDED -> {
+                                Log.d("LiveTvPlayer", "STATE_ENDED")
+                                showLoadingOverlayDelayed()
+                            }
+
+                            Player.STATE_IDLE -> {
+                                Log.d("LiveTvPlayer", "STATE_IDLE")
+                            }
                         }
                     }
-                }
 
-                override fun onPlayerError(error: PlaybackException) {
-                    Log.e(
-                        "LiveTvPlayer",
-                        "Player error: ${error.errorCodeName} - ${error.message}",
-                        error
-                    )
-                    showLoadingOverlay()
-                }
-            })
-        }
+                    override fun onIsLoadingChanged(isLoading: Boolean) {
+                        Log.d("LiveTvPlayer", "isLoading = $isLoading")
+                    }
+
+                    override fun onRenderedFirstFrame() {
+                        Log.d("LiveTvPlayer", "onRenderedFirstFrame")
+                        hideLoadingOverlay()
+                    }
+
+                    override fun onPlayerError(error: PlaybackException) {
+                        Log.e(
+                            "LiveTvPlayer",
+                            "Player error: ${error.errorCodeName} - ${error.message}",
+                            error
+                        )
+                        showLoadingOverlayDelayed()
+                    }
+                })
+            }
     }
 
     private fun loadLiveGrid() {
@@ -156,16 +194,27 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                 val mediaItem = MediaItem.Builder()
                     .setUri(streamUrl)
                     .setMimeType(MimeTypes.APPLICATION_M3U8)
+                    .setLiveConfiguration(
+                        MediaItem.LiveConfiguration.Builder()
+                            .setTargetOffsetMs(5000)
+                            .setMinPlaybackSpeed(0.97f)
+                            .setMaxPlaybackSpeed(1.03f)
+                            .build()
+                    )
                     .build()
 
                 val dataSourceFactory = DefaultHttpDataSource.Factory()
                     .setAllowCrossProtocolRedirects(true)
                     .setUserAgent("WishNetTV/1.0")
+                    .setConnectTimeoutMs(15000)
+                    .setReadTimeoutMs(30000)
 
                 val mediaSource = HlsMediaSource.Factory(dataSourceFactory)
+                    .setAllowChunklessPreparation(false)
                     .createMediaSource(mediaItem)
 
                 player?.apply {
+                    playWhenReady = false
                     stop()
                     clearMediaItems()
                     setMediaSource(mediaSource)
@@ -192,14 +241,24 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             imgChannelLogo.setImageDrawable(null)
         }
 
-        showLoadingOverlay()
+        showLoadingOverlayImmediate()
     }
 
-    private fun showLoadingOverlay() {
+    private fun showLoadingOverlayImmediate() {
+        pendingShowLoading = false
+        uiHandler.removeCallbacks(delayedShowLoading)
         loadingOverlay.visibility = View.VISIBLE
     }
 
+    private fun showLoadingOverlayDelayed() {
+        pendingShowLoading = true
+        uiHandler.removeCallbacks(delayedShowLoading)
+        uiHandler.postDelayed(delayedShowLoading, 1200)
+    }
+
     private fun hideLoadingOverlay() {
+        pendingShowLoading = false
+        uiHandler.removeCallbacks(delayedShowLoading)
         loadingOverlay.visibility = View.GONE
     }
 
@@ -237,13 +296,12 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (player == null) {
-            initializePlayer()
-        }
+        initializePlayer()
     }
 
     override fun onStop() {
         super.onStop()
+        hideLoadingOverlay()
         playerView.player = null
         player?.release()
         player = null
