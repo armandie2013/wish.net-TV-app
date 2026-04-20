@@ -43,14 +43,23 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
     private var grid: List<LiveChannelItem> = emptyList()
     private var currentChannelIndex: Int = -1
+    private var currentStreamUrl: String? = null
 
     private val uiHandler = Handler(Looper.getMainLooper())
     private var pendingShowLoading = false
+    private var pendingRecovery = false
 
     private val delayedShowLoading = Runnable {
         if (pendingShowLoading) {
             loadingOverlay.visibility = View.VISIBLE
         }
+    }
+
+    private val delayedRecovery = Runnable {
+        if (!pendingRecovery) return@Runnable
+
+        Log.w("LiveTvPlayer", "Recovery automático del canal actual")
+        reloadCurrentChannelStream()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,16 +102,19 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                             Player.STATE_BUFFERING -> {
                                 Log.d("LiveTvPlayer", "STATE_BUFFERING")
                                 showLoadingOverlayDelayed()
+                                scheduleRecovery()
                             }
 
                             Player.STATE_READY -> {
                                 Log.d("LiveTvPlayer", "STATE_READY")
+                                cancelRecovery()
                                 hideLoadingOverlay()
                             }
 
                             Player.STATE_ENDED -> {
                                 Log.d("LiveTvPlayer", "STATE_ENDED")
                                 showLoadingOverlayDelayed()
+                                scheduleRecovery()
                             }
 
                             Player.STATE_IDLE -> {
@@ -117,6 +129,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
                     override fun onRenderedFirstFrame() {
                         Log.d("LiveTvPlayer", "onRenderedFirstFrame")
+                        cancelRecovery()
                         hideLoadingOverlay()
                     }
 
@@ -127,6 +140,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                             error
                         )
                         showLoadingOverlayDelayed()
+                        scheduleRecovery()
                     }
                 })
             }
@@ -173,6 +187,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private fun playCurrentChannel() {
         val channel = grid.getOrNull(currentChannelIndex) ?: return
 
+        currentStreamUrl = null
         showChannelLoading(channel)
 
         lifecycleScope.launch {
@@ -191,41 +206,58 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                     return@onSuccess
                 }
 
-                val mediaItem = MediaItem.Builder()
-                    .setUri(streamUrl)
-                    .setMimeType(MimeTypes.APPLICATION_M3U8)
-                    .setLiveConfiguration(
-                        MediaItem.LiveConfiguration.Builder()
-                            .setTargetOffsetMs(5000)
-                            .setMinPlaybackSpeed(0.97f)
-                            .setMaxPlaybackSpeed(1.03f)
-                            .build()
-                    )
-                    .build()
-
-                val dataSourceFactory = DefaultHttpDataSource.Factory()
-                    .setAllowCrossProtocolRedirects(true)
-                    .setUserAgent("WishNetTV/1.0")
-                    .setConnectTimeoutMs(15000)
-                    .setReadTimeoutMs(30000)
-
-                val mediaSource = HlsMediaSource.Factory(dataSourceFactory)
-                    .setAllowChunklessPreparation(false)
-                    .createMediaSource(mediaItem)
-
-                player?.apply {
-                    playWhenReady = false
-                    stop()
-                    clearMediaItems()
-                    setMediaSource(mediaSource)
-                    prepare()
-                    playWhenReady = true
-                }
-
+                currentStreamUrl = streamUrl
+                prepareAndPlay(streamUrl)
                 liveTvPrefs.saveLastChannelId(channel.id)
             }.onFailure { error ->
                 Log.e("LiveTvPlayer", "Error en /play: ${error.message}", error)
             }
+        }
+    }
+
+    private fun reloadCurrentChannelStream() {
+        val streamUrl = currentStreamUrl
+
+        if (streamUrl.isNullOrBlank()) {
+            Log.w("LiveTvPlayer", "No hay streamUrl actual para recovery, resolviendo canal otra vez")
+            playCurrentChannel()
+            return
+        }
+
+        Log.w("LiveTvPlayer", "Reintentando streamUrl actual")
+        prepareAndPlay(streamUrl)
+    }
+
+    private fun prepareAndPlay(streamUrl: String) {
+        val mediaItem = MediaItem.Builder()
+            .setUri(streamUrl)
+            .setMimeType(MimeTypes.APPLICATION_M3U8)
+            .setLiveConfiguration(
+                MediaItem.LiveConfiguration.Builder()
+                    .setTargetOffsetMs(5000)
+                    .setMinPlaybackSpeed(0.97f)
+                    .setMaxPlaybackSpeed(1.03f)
+                    .build()
+            )
+            .build()
+
+        val dataSourceFactory = DefaultHttpDataSource.Factory()
+            .setAllowCrossProtocolRedirects(true)
+            .setUserAgent("WishNetTV/1.0")
+            .setConnectTimeoutMs(15000)
+            .setReadTimeoutMs(30000)
+
+        val mediaSource = HlsMediaSource.Factory(dataSourceFactory)
+            .setAllowChunklessPreparation(false)
+            .createMediaSource(mediaItem)
+
+        player?.apply {
+            playWhenReady = false
+            stop()
+            clearMediaItems()
+            setMediaSource(mediaSource)
+            prepare()
+            playWhenReady = true
         }
     }
 
@@ -262,8 +294,20 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         loadingOverlay.visibility = View.GONE
     }
 
+    private fun scheduleRecovery() {
+        pendingRecovery = true
+        uiHandler.removeCallbacks(delayedRecovery)
+        uiHandler.postDelayed(delayedRecovery, 8000)
+    }
+
+    private fun cancelRecovery() {
+        pendingRecovery = false
+        uiHandler.removeCallbacks(delayedRecovery)
+    }
+
     private fun zapNext() {
         if (grid.isEmpty()) return
+        cancelRecovery()
         currentChannelIndex =
             if (currentChannelIndex + 1 > grid.lastIndex) 0 else currentChannelIndex + 1
         playCurrentChannel()
@@ -271,6 +315,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
     private fun zapPrevious() {
         if (grid.isEmpty()) return
+        cancelRecovery()
         currentChannelIndex =
             if (currentChannelIndex - 1 < 0) grid.lastIndex else currentChannelIndex - 1
         playCurrentChannel()
@@ -301,6 +346,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        cancelRecovery()
         hideLoadingOverlay()
         playerView.player = null
         player?.release()
