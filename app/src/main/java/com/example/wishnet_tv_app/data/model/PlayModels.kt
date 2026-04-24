@@ -25,10 +25,12 @@ data class PlayLocation(
 )
 
 data class PlayNode(
-    val id: String,
-    val nombre: String,
+    val id: String? = null,
+    val nombre: String? = null,
+    val codigo: String? = null,
     val tipo: String? = null,
-    val urlBase: String? = null
+    val urlBase: String? = null,
+    val healthStatus: String? = null
 )
 
 data class PlayChannel(
