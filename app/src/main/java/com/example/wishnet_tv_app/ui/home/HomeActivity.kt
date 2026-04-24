@@ -7,7 +7,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wishnet_tv_app.R
+import com.example.wishnet_tv_app.data.AppContainer
 import com.example.wishnet_tv_app.ui.live.LiveTvPlayerActivity
+import com.example.wishnet_tv_app.ui.login.LoginEmailActivity
 
 class HomeActivity : AppCompatActivity() {
 
@@ -22,13 +24,31 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var cardAccount: LinearLayout
     private lateinit var cardLogout: LinearLayout
 
+    private val sessionManager by lazy {
+        AppContainer.sessionManager(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (sessionManager.getToken().isNullOrBlank()) {
+            goToLogin()
+            return
+        }
+
         setContentView(R.layout.activity_home)
 
         bindViews()
         setupUI()
         setupActions()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (sessionManager.getToken().isNullOrBlank()) {
+            goToLogin()
+        }
     }
 
     private fun bindViews() {
@@ -48,22 +68,19 @@ class HomeActivity : AppCompatActivity() {
         txtWelcome.text = "Bienvenido"
         txtHomeSubtitle.text = "Tu acceso a wish.net TV está listo"
         txtStatus.text = "Sesión activa"
-        txtUserInfo.text = "Listo para continuar"
+        txtUserInfo.text = sessionManager.getUserName() ?: "Listo para continuar"
 
-        // Foco inicial en TV EN VIVO
         cardLiveTv.requestFocus()
     }
 
     private fun setupActions() {
-
-        // 👉 CLICK (mouse / touch / OK automático)
         cardLiveTv.setOnClickListener {
             openLiveTv()
         }
 
-        // 👉 CONTROL REMOTO (OK / ENTER)
         cardLiveTv.setOnKeyListener { _, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN &&
+            if (
+                event.action == KeyEvent.ACTION_DOWN &&
                 (keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
                         keyCode == KeyEvent.KEYCODE_ENTER)
             ) {
@@ -74,13 +91,37 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        // 👉 LOGOUT (placeholder)
         cardLogout.setOnClickListener {
-            finish()
+            logout()
+        }
+
+        cardLogout.setOnKeyListener { _, keyCode, event ->
+            if (
+                event.action == KeyEvent.ACTION_DOWN &&
+                (keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                        keyCode == KeyEvent.KEYCODE_ENTER)
+            ) {
+                logout()
+                true
+            } else {
+                false
+            }
         }
     }
 
     private fun openLiveTv() {
         startActivity(Intent(this, LiveTvPlayerActivity::class.java))
+    }
+
+    private fun logout() {
+        sessionManager.clearSession()
+        goToLogin()
+    }
+
+    private fun goToLogin() {
+        val intent = Intent(this, LoginEmailActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }
