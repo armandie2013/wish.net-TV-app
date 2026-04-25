@@ -71,6 +71,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private var grid: List<LiveChannelItem> = emptyList()
     private var currentChannelIndex: Int = -1
     private var guideSelectedIndex: Int = -1
+    private var previousGuideSelectedIndex: Int = -1
 
     private var currentStreamUrl: String? = null
     private var currentStrategy: String? = null
@@ -92,13 +93,17 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private val guideAutoCloseMs = 5000L
 
     private var lastGuideMoveAt = 0L
-    private val guideMoveThrottleMs = 75L
+    private val guideMoveThrottleMs = 55L
+
+    private var guideScrollGeneration = 0L
 
     private val guideRows = mutableListOf<GuideRowView>()
 
     private data class GuideRowView(
         val row: LinearLayout,
+        val selector: TextView,
         val title: TextView,
+        val subtitle: TextView,
         val marker: TextView
     )
 
@@ -161,6 +166,9 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         channelGuidePanel = findViewById(R.id.channelGuidePanel)
         channelGuideScroll = findViewById(R.id.channelGuideScroll)
         channelGuideList = findViewById(R.id.channelGuideList)
+
+        channelGuideScroll.isFocusable = false
+        channelGuideList.isFocusable = false
     }
 
     private fun initializePlayer() {
@@ -258,6 +266,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
                 currentChannelIndex = if (indexFromPrefs >= 0) indexFromPrefs else 0
                 guideSelectedIndex = currentChannelIndex
+                previousGuideSelectedIndex = guideSelectedIndex
 
                 playCurrentChannel(resetRecovery = true)
             }.onFailure { error ->
@@ -297,7 +306,6 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                 }
             } catch (error: CancellationException) {
                 // Normal cuando el usuario cambia rápido de canal.
-                // No se muestra nada en pantalla.
             } catch (error: Throwable) {
                 isChangingChannel = false
                 handleError(error, "Error resolviendo canal")
@@ -485,6 +493,8 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             if (currentChannelIndex + 1 > grid.lastIndex) 0 else currentChannelIndex + 1
 
         guideSelectedIndex = currentChannelIndex
+        previousGuideSelectedIndex = guideSelectedIndex
+
         playCurrentChannel(resetRecovery = true)
     }
 
@@ -499,6 +509,8 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             if (currentChannelIndex - 1 < 0) grid.lastIndex else currentChannelIndex - 1
 
         guideSelectedIndex = currentChannelIndex
+        previousGuideSelectedIndex = guideSelectedIndex
+
         playCurrentChannel(resetRecovery = true)
     }
 
@@ -508,15 +520,20 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         hideInfoOverlay()
 
         guideSelectedIndex = if (currentChannelIndex >= 0) currentChannelIndex else 0
+        previousGuideSelectedIndex = guideSelectedIndex
 
         if (guideRows.size != grid.size) {
             renderGuide()
+        } else {
+            updateGuideSelectionViews()
         }
 
-        updateGuideSelectionViews()
         channelGuidePanel.visibility = View.VISIBLE
 
-        scrollGuideToSelected()
+        channelGuidePanel.post {
+            forceGuideScrollToSelected(center = true)
+        }
+
         resetGuideAutoClose()
     }
 
@@ -541,6 +558,8 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         if (now - lastGuideMoveAt < guideMoveThrottleMs) return
         lastGuideMoveAt = now
 
+        previousGuideSelectedIndex = guideSelectedIndex
+
         guideSelectedIndex += delta
 
         if (guideSelectedIndex > grid.lastIndex) {
@@ -551,8 +570,10 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             guideSelectedIndex = grid.lastIndex
         }
 
-        updateGuideSelectionViews()
-        scrollGuideToSelected()
+        updateGuideRowState(previousGuideSelectedIndex)
+        updateGuideRowState(guideSelectedIndex)
+
+        forceGuideScrollToSelected(center = false)
         resetGuideAutoClose()
     }
 
@@ -567,6 +588,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
         currentChannelIndex = selectedIndex
         guideSelectedIndex = selectedIndex
+        previousGuideSelectedIndex = selectedIndex
 
         playCurrentChannel(resetRecovery = true)
     }
@@ -580,20 +602,33 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 isFocusable = false
+                isFocusableInTouchMode = false
                 isClickable = true
-                setPadding(dp(8), dp(6), dp(8), dp(6))
+                setPadding(dp(5), dp(4), dp(5), dp(4))
+            }
+
+            val selector = TextView(this).apply {
+                text = ""
+                setTextColor(Color.parseColor("#38BDF8"))
+                textSize = 12f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(dp(14), LinearLayout.LayoutParams.MATCH_PARENT)
             }
 
             val logo = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(dp(34), dp(26)).apply {
-                    marginEnd = dp(8)
+                layoutParams = LinearLayout.LayoutParams(dp(30), dp(24)).apply {
+                    marginStart = dp(3)
+                    marginEnd = dp(7)
                 }
                 scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = false
             }
 
             if (!channel.logo.isNullOrBlank()) {
                 Glide.with(this)
                     .load(channel.logo)
+                    .dontAnimate()
                     .into(logo)
             } else {
                 logo.setImageDrawable(null)
@@ -601,9 +636,10 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
             val textContainer = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_VERTICAL
                 layoutParams = LinearLayout.LayoutParams(
                     0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     1f
                 )
             }
@@ -611,28 +647,31 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             val title = TextView(this).apply {
                 text = "${channel.numero}. ${channel.name}"
                 setTextColor(Color.WHITE)
-                textSize = 11.5f
+                textSize = 11f
                 typeface = Typeface.DEFAULT
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
+                includeFontPadding = false
             }
 
             val subtitle = TextView(this).apply {
                 text = channel.category ?: channel.sourceName ?: ""
                 setTextColor(Color.parseColor("#CBD5E1"))
-                textSize = 9f
+                textSize = 8.5f
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
+                includeFontPadding = false
             }
 
             val marker = TextView(this).apply {
                 text = ""
                 setTextColor(Color.parseColor("#22C55E"))
-                textSize = 10f
+                textSize = 8.5f
                 typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER_VERTICAL
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
+                    LinearLayout.LayoutParams.MATCH_PARENT
                 ).apply {
                     marginStart = dp(5)
                 }
@@ -641,6 +680,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             textContainer.addView(title)
             textContainer.addView(subtitle)
 
+            row.addView(selector)
             row.addView(logo)
             row.addView(textContainer)
             row.addView(marker)
@@ -654,7 +694,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                 row,
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
+                    dp(43)
                 ).apply {
                     bottomMargin = dp(3)
                 }
@@ -663,7 +703,9 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             guideRows.add(
                 GuideRowView(
                     row = row,
+                    selector = selector,
                     title = title,
+                    subtitle = subtitle,
                     marker = marker
                 )
             )
@@ -673,25 +715,46 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     }
 
     private fun updateGuideSelectionViews() {
-        guideRows.forEachIndexed { index, guideRow ->
-            val selected = index == guideSelectedIndex
-            val current = index == currentChannelIndex
-
-            guideRow.row.background = createGuideRowBackground(
-                selected = selected,
-                current = current
-            )
-
-            guideRow.title.typeface =
-                if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-
-            guideRow.marker.text = if (current) "●" else ""
+        guideRows.forEachIndexed { index, _ ->
+            updateGuideRowState(index)
         }
+    }
+
+    private fun updateGuideRowState(index: Int) {
+        if (index !in guideRows.indices) return
+
+        val guideRow = guideRows[index]
+        val selected = index == guideSelectedIndex
+        val current = index == currentChannelIndex
+
+        guideRow.row.background = createGuideRowBackground(
+            selected = selected,
+            current = current
+        )
+
+        guideRow.selector.text = if (selected) "▶" else ""
+
+        guideRow.title.typeface =
+            if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+
+        guideRow.title.setTextColor(
+            when {
+                selected -> Color.WHITE
+                current -> Color.parseColor("#E0F2FE")
+                else -> Color.WHITE
+            }
+        )
+
+        guideRow.subtitle.setTextColor(
+            if (selected) Color.parseColor("#E0F2FE") else Color.parseColor("#CBD5E1")
+        )
+
+        guideRow.marker.text = if (current) "●" else ""
     }
 
     private fun createGuideRowBackground(selected: Boolean, current: Boolean): GradientDrawable {
         val color = when {
-            selected -> Color.parseColor("#4481A4C7")
+            selected -> Color.parseColor("#774F9BCF")
             current -> Color.parseColor("#3314B8A6")
             else -> Color.TRANSPARENT
         }
@@ -702,18 +765,79 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             setColor(color)
 
             if (selected) {
-                setStroke(dp(1), Color.parseColor("#6681A4C7"))
+                setStroke(dp(1), Color.parseColor("#DD7DD3FC"))
+            } else if (current) {
+                setStroke(dp(1), Color.parseColor("#5534D399"))
             }
         }
     }
 
-    private fun scrollGuideToSelected() {
+    private fun forceGuideScrollToSelected(center: Boolean) {
+        if (guideSelectedIndex !in guideRows.indices) return
+
+        guideScrollGeneration += 1
+        val thisGeneration = guideScrollGeneration
+
         channelGuideScroll.post {
-            val selectedView = channelGuideList.getChildAt(guideSelectedIndex)
-            selectedView?.let {
-                val targetY = (it.top - dp(18)).coerceAtLeast(0)
-                channelGuideScroll.scrollTo(0, targetY)
+            if (thisGeneration != guideScrollGeneration) return@post
+            correctGuideScroll(center = center)
+        }
+
+        uiHandler.postDelayed({
+            if (thisGeneration != guideScrollGeneration) return@postDelayed
+            correctGuideScroll(center = center)
+        }, 35)
+
+        uiHandler.postDelayed({
+            if (thisGeneration != guideScrollGeneration) return@postDelayed
+            correctGuideScroll(center = center)
+        }, 90)
+    }
+
+    private fun correctGuideScroll(center: Boolean) {
+        if (guideSelectedIndex !in guideRows.indices) return
+
+        val selectedView = channelGuideList.getChildAt(guideSelectedIndex) ?: return
+
+        val viewportHeight = channelGuideScroll.height
+        val contentHeight = channelGuideList.height
+
+        if (viewportHeight <= 0 || contentHeight <= 0) return
+
+        val currentScrollY = channelGuideScroll.scrollY
+        val visibleTop = currentScrollY
+        val visibleBottom = currentScrollY + viewportHeight
+
+        val selectedTop = selectedView.top
+        val selectedBottom = selectedView.bottom
+        val selectedCenter = selectedTop + (selectedView.height / 2)
+
+        val safeTop = dp(22)
+        val safeBottom = dp(22)
+
+        val targetScrollY = if (center) {
+            selectedCenter - (viewportHeight / 2)
+        } else {
+            when {
+                selectedTop < visibleTop + safeTop -> {
+                    selectedTop - safeTop
+                }
+
+                selectedBottom > visibleBottom - safeBottom -> {
+                    selectedBottom - viewportHeight + safeBottom
+                }
+
+                else -> {
+                    currentScrollY
+                }
             }
+        }
+
+        val maxScrollY = (contentHeight - viewportHeight).coerceAtLeast(0)
+        val finalScrollY = targetScrollY.coerceIn(0, maxScrollY)
+
+        if (finalScrollY != currentScrollY) {
+            channelGuideScroll.scrollTo(0, finalScrollY)
         }
     }
 
