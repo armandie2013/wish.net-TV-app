@@ -130,16 +130,19 @@
 
     <LinearLayout
         android:id="@+id/channelGuidePanel"
-        android:layout_width="275dp"
+        android:layout_width="235dp"
         android:layout_height="match_parent"
-        android:layout_gravity="end"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="18dp"
         android:background="@drawable/bg_glass"
         android:elevation="20dp"
         android:orientation="vertical"
-        android:paddingLeft="10dp"
-        android:paddingTop="16dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="16dp"
+        android:paddingLeft="9dp"
+        android:paddingTop="13dp"
+        android:paddingRight="9dp"
+        android:paddingBottom="13dp"
         android:visibility="gone">
 
         <TextView
@@ -148,7 +151,7 @@
             android:layout_height="wrap_content"
             android:text="Guía de canales"
             android:textColor="#FFFFFF"
-            android:textSize="15sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
 
         <TextView
@@ -158,13 +161,13 @@
             android:layout_marginTop="3dp"
             android:text="↑/↓ mover · OK seleccionar · ← cerrar"
             android:textColor="#CBD5E1"
-            android:textSize="9sp" />
+            android:textSize="8sp" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="7dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp"
             android:background="#22FFFFFF" />
 
         <ScrollView
@@ -172,8 +175,11 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:clipToPadding="false"
             android:fillViewport="false"
-            android:overScrollMode="never">
+            android:overScrollMode="never"
+            android:paddingBottom="2dp"
+            android:scrollbars="none">
 
             <LinearLayout
                 android:id="@+id/channelGuideList"
