@@ -3,6 +3,7 @@ package com.example.wishnet_tv_app.ui.live
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -35,6 +36,7 @@ import com.example.wishnet_tv_app.data.model.PlayResponse
 import com.example.wishnet_tv_app.ui.login.LoginEmailActivity
 import com.example.wishnet_tv_app.utils.LiveTvPrefs
 import com.example.wishnet_tv_app.utils.SessionExpiredException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -89,6 +91,17 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private val maxRecoveryAttempts = 3
     private val guideAutoCloseMs = 5000L
 
+    private var lastGuideMoveAt = 0L
+    private val guideMoveThrottleMs = 75L
+
+    private val guideRows = mutableListOf<GuideRowView>()
+
+    private data class GuideRowView(
+        val row: LinearLayout,
+        val title: TextView,
+        val marker: TextView
+    )
+
     private val delayedShowLoading = Runnable {
         if (pendingShowLoading) {
             loadingOverlay.visibility = View.VISIBLE
@@ -96,7 +109,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     }
 
     private val hideInfoOverlayRunnable = Runnable {
-        infoOverlay.visibility = View.GONE
+        hideInfoOverlay()
     }
 
     private val hideStatusOverlayRunnable = Runnable {
@@ -183,7 +196,6 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                                 recoveryAttempt = 0
                                 cancelRecovery()
                                 hideLoadingOverlay()
-                                showInfoOverlay(autoHide = true)
                             }
 
                             Player.STATE_ENDED -> {
@@ -200,7 +212,6 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                         recoveryAttempt = 0
                         cancelRecovery()
                         hideLoadingOverlay()
-                        showInfoOverlay(autoHide = true)
                     }
 
                     override fun onPlayerError(error: PlaybackException) {
@@ -268,15 +279,26 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         isChangingChannel = true
 
         closeGuide()
+        hideInfoOverlay()
         showChannelLoading(channel)
         updateInfoOverlay(channel)
 
         playJob = lifecycleScope.launch {
-            val result = repository.getPlayInfo(channel.id)
+            try {
+                val result = repository.getPlayInfo(channel.id)
 
-            result.onSuccess { response ->
-                handlePlayResponse(channel, response)
-            }.onFailure { error ->
+                result.onSuccess { response ->
+                    handlePlayResponse(channel, response)
+                }.onFailure { error ->
+                    if (error is CancellationException) return@launch
+
+                    isChangingChannel = false
+                    handleError(error, "Error resolviendo canal")
+                }
+            } catch (error: CancellationException) {
+                // Normal cuando el usuario cambia rápido de canal.
+                // No se muestra nada en pantalla.
+            } catch (error: Throwable) {
                 isChangingChannel = false
                 handleError(error, "Error resolviendo canal")
             }
@@ -346,7 +368,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private fun prepareAndPlay(streamUrl: String) {
         val dataSourceFactory = DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(true)
-            .setUserAgent("WishNetTV/1.0")
+            .setUserAgent("SN-IPTV/1.0")
             .setConnectTimeoutMs(15000)
             .setReadTimeoutMs(30000)
 
@@ -396,6 +418,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private fun showInfoOverlay(autoHide: Boolean) {
         val channel = grid.getOrNull(currentChannelIndex) ?: return
 
+        closeGuide()
         updateInfoOverlay(channel)
 
         infoOverlay.visibility = View.VISIBLE
@@ -404,6 +427,11 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         if (autoHide) {
             uiHandler.postDelayed(hideInfoOverlayRunnable, 3000)
         }
+    }
+
+    private fun hideInfoOverlay() {
+        uiHandler.removeCallbacks(hideInfoOverlayRunnable)
+        infoOverlay.visibility = View.GONE
     }
 
     private fun showStatus(message: String) {
@@ -450,6 +478,8 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         if (grid.isEmpty()) return
 
         cancelRecovery()
+        hideInfoOverlay()
+        closeGuide()
 
         currentChannelIndex =
             if (currentChannelIndex + 1 > grid.lastIndex) 0 else currentChannelIndex + 1
@@ -462,6 +492,8 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         if (grid.isEmpty()) return
 
         cancelRecovery()
+        hideInfoOverlay()
+        closeGuide()
 
         currentChannelIndex =
             if (currentChannelIndex - 1 < 0) grid.lastIndex else currentChannelIndex - 1
@@ -473,10 +505,18 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private fun openGuide() {
         if (grid.isEmpty()) return
 
+        hideInfoOverlay()
+
         guideSelectedIndex = if (currentChannelIndex >= 0) currentChannelIndex else 0
-        renderGuide()
+
+        if (guideRows.size != grid.size) {
+            renderGuide()
+        }
+
+        updateGuideSelectionViews()
         channelGuidePanel.visibility = View.VISIBLE
-        uiHandler.removeCallbacks(hideInfoOverlayRunnable)
+
+        scrollGuideToSelected()
         resetGuideAutoClose()
     }
 
@@ -497,6 +537,10 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private fun moveGuideSelection(delta: Int) {
         if (grid.isEmpty()) return
 
+        val now = System.currentTimeMillis()
+        if (now - lastGuideMoveAt < guideMoveThrottleMs) return
+        lastGuideMoveAt = now
+
         guideSelectedIndex += delta
 
         if (guideSelectedIndex > grid.lastIndex) {
@@ -507,7 +551,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             guideSelectedIndex = grid.lastIndex
         }
 
-        renderGuide()
+        updateGuideSelectionViews()
         scrollGuideToSelected()
         resetGuideAutoClose()
     }
@@ -515,30 +559,29 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private fun selectGuideChannel() {
         if (guideSelectedIndex !in grid.indices) return
 
-        currentChannelIndex = guideSelectedIndex
+        val selectedIndex = guideSelectedIndex
+
         closeGuide()
+        hideInfoOverlay()
         cancelRecovery()
+
+        currentChannelIndex = selectedIndex
+        guideSelectedIndex = selectedIndex
+
         playCurrentChannel(resetRecovery = true)
     }
 
     private fun renderGuide() {
         channelGuideList.removeAllViews()
+        guideRows.clear()
 
         grid.forEachIndexed { index, channel ->
-            val selected = index == guideSelectedIndex
-            val current = index == currentChannelIndex
-
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                isFocusable = false
+                isClickable = true
                 setPadding(dp(8), dp(6), dp(8), dp(6))
-                background = android.graphics.drawable.ColorDrawable(
-                    when {
-                        selected -> Color.parseColor("#4481A4C7")
-                        current -> Color.parseColor("#3314B8A6")
-                        else -> Color.TRANSPARENT
-                    }
-                )
             }
 
             val logo = ImageView(this).apply {
@@ -569,7 +612,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                 text = "${channel.numero}. ${channel.name}"
                 setTextColor(Color.WHITE)
                 textSize = 11.5f
-                typeface = if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                typeface = Typeface.DEFAULT
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
             }
@@ -583,7 +626,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             }
 
             val marker = TextView(this).apply {
-                text = if (current) "●" else ""
+                text = ""
                 setTextColor(Color.parseColor("#22C55E"))
                 textSize = 10f
                 typeface = Typeface.DEFAULT_BOLD
@@ -616,6 +659,51 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                     bottomMargin = dp(3)
                 }
             )
+
+            guideRows.add(
+                GuideRowView(
+                    row = row,
+                    title = title,
+                    marker = marker
+                )
+            )
+        }
+
+        updateGuideSelectionViews()
+    }
+
+    private fun updateGuideSelectionViews() {
+        guideRows.forEachIndexed { index, guideRow ->
+            val selected = index == guideSelectedIndex
+            val current = index == currentChannelIndex
+
+            guideRow.row.background = createGuideRowBackground(
+                selected = selected,
+                current = current
+            )
+
+            guideRow.title.typeface =
+                if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+
+            guideRow.marker.text = if (current) "●" else ""
+        }
+    }
+
+    private fun createGuideRowBackground(selected: Boolean, current: Boolean): GradientDrawable {
+        val color = when {
+            selected -> Color.parseColor("#4481A4C7")
+            current -> Color.parseColor("#3314B8A6")
+            else -> Color.TRANSPARENT
+        }
+
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(10).toFloat()
+            setColor(color)
+
+            if (selected) {
+                setStroke(dp(1), Color.parseColor("#6681A4C7"))
+            }
         }
     }
 
@@ -623,7 +711,8 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         channelGuideScroll.post {
             val selectedView = channelGuideList.getChildAt(guideSelectedIndex)
             selectedView?.let {
-                channelGuideScroll.smoothScrollTo(0, it.top - dp(16))
+                val targetY = (it.top - dp(18)).coerceAtLeast(0)
+                channelGuideScroll.scrollTo(0, targetY)
             }
         }
     }
@@ -647,13 +736,19 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
                 KeyEvent.KEYCODE_DPAD_CENTER,
                 KeyEvent.KEYCODE_ENTER -> {
-                    selectGuideChannel()
+                    if ((event?.repeatCount ?: 0) == 0) {
+                        selectGuideChannel()
+                    }
                     true
                 }
 
                 KeyEvent.KEYCODE_DPAD_LEFT,
                 KeyEvent.KEYCODE_BACK -> {
                     closeGuide()
+                    true
+                }
+
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
                     true
                 }
 
@@ -711,6 +806,10 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     }
 
     private fun handleError(error: Throwable, prefix: String) {
+        if (error is CancellationException) {
+            return
+        }
+
         Log.e("LiveTvPlayer", "$prefix: ${error.message}", error)
 
         if (error is SessionExpiredException) {
@@ -718,7 +817,16 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             return
         }
 
-        showStatus(error.message ?: prefix)
+        val message = error.message ?: prefix
+
+        if (
+            message.contains("StandaloneCoroutine was cancelled", ignoreCase = true) ||
+            message.contains("Job was cancelled", ignoreCase = true)
+        ) {
+            return
+        }
+
+        showStatus(message)
     }
 
     private fun goToLogin() {
@@ -749,6 +857,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         cancelRecovery()
         hideLoadingOverlay()
         closeGuide()
+        hideInfoOverlay()
 
         uiHandler.removeCallbacks(hideInfoOverlayRunnable)
         uiHandler.removeCallbacks(hideStatusOverlayRunnable)

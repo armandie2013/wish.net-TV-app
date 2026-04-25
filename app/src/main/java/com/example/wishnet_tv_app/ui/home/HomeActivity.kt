@@ -66,7 +66,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupUI() {
         txtWelcome.text = "Bienvenido"
-        txtHomeSubtitle.text = "Tu acceso a wish.net TV está listo"
+        txtHomeSubtitle.text = getString(R.string.home_subtitle)
         txtStatus.text = "Sesión activa"
         txtUserInfo.text = sessionManager.getUserName() ?: "Listo para continuar"
 

@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="Tu acceso a wish.net TV está listo."
+            android:text="@string/home_subtitle"
             android:textColor="#9CA3AF"
             android:textSize="16sp" />
 
