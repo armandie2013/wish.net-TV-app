@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">wish.net-TV-app</string>
+    <string name="app_name">SN-IPTV</string>
+    <string name="brand_name">SN-IPTV</string>
+    <string name="brand_subtitle">Tu plataforma de TV en vivo</string>
+    <string name="home_subtitle">Tu acceso a SN-IPTV está listo</string>
 </resources>
