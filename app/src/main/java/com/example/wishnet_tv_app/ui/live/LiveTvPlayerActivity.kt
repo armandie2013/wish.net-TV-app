@@ -1,6 +1,7 @@
 package com.example.wishnet_tv_app.ui.live
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -11,6 +12,7 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -61,6 +63,19 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private lateinit var channelGuidePanel: LinearLayout
     private lateinit var channelGuideScroll: ScrollView
     private lateinit var channelGuideList: LinearLayout
+
+    /*
+        Controles táctiles para celulares.
+
+        Nullable para que no rompa Android TV si algún layout alternativo
+        no tiene estos IDs.
+    */
+    private var touchControlsOverlay: LinearLayout? = null
+    private var btnTouchUp: TextView? = null
+    private var btnTouchDown: TextView? = null
+    private var btnTouchLeft: TextView? = null
+    private var btnTouchRight: TextView? = null
+    private var btnTouchOk: TextView? = null
 
     private var player: ExoPlayer? = null
 
@@ -169,6 +184,157 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
         channelGuideScroll.isFocusable = false
         channelGuideList.isFocusable = false
+
+        touchControlsOverlay = findViewByIdOrNull(R.id.touchControlsOverlay)
+        btnTouchUp = findViewByIdOrNull(R.id.btnTouchUp)
+        btnTouchDown = findViewByIdOrNull(R.id.btnTouchDown)
+        btnTouchLeft = findViewByIdOrNull(R.id.btnTouchLeft)
+        btnTouchRight = findViewByIdOrNull(R.id.btnTouchRight)
+        btnTouchOk = findViewByIdOrNull(R.id.btnTouchOk)
+
+        setupGuideTouchBehavior()
+        setupTouchControls()
+    }
+
+    private fun <T : View> findViewByIdOrNull(id: Int): T? {
+        return try {
+            findViewById<T>(id)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /*
+        Corrige el comportamiento en celulares:
+        mientras el usuario toca o desplaza la lista, la guía NO se cierra.
+        Recién cuando levanta el dedo vuelve a empezar el contador de 5 segundos.
+    */
+    private fun setupGuideTouchBehavior() {
+        channelGuidePanel.setOnTouchListener { _, event ->
+            if (!isGuideOpen()) return@setOnTouchListener false
+
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN,
+                MotionEvent.ACTION_MOVE -> {
+                    pauseGuideAutoClose()
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    resetGuideAutoClose()
+                }
+            }
+
+            false
+        }
+
+        channelGuideScroll.setOnTouchListener { _, event ->
+            if (!isGuideOpen()) return@setOnTouchListener false
+
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN,
+                MotionEvent.ACTION_MOVE -> {
+                    pauseGuideAutoClose()
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    resetGuideAutoClose()
+                }
+            }
+
+            false
+        }
+
+        channelGuideList.setOnTouchListener { _, event ->
+            if (!isGuideOpen()) return@setOnTouchListener false
+
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN,
+                MotionEvent.ACTION_MOVE -> {
+                    pauseGuideAutoClose()
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    resetGuideAutoClose()
+                }
+            }
+
+            false
+        }
+    }
+
+    private fun setupTouchControls() {
+        val overlay = touchControlsOverlay ?: return
+
+        val isTvDevice = packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+        val hasTouchscreen = packageManager.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
+
+        /*
+            En Android TV queda oculto.
+            En celulares queda visible.
+        */
+        overlay.visibility =
+            if (hasTouchscreen && !isTvDevice) View.VISIBLE else View.GONE
+
+        overlay.setOnTouchListener { _, event ->
+            if (!isGuideOpen()) return@setOnTouchListener false
+
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN,
+                MotionEvent.ACTION_MOVE -> pauseGuideAutoClose()
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> resetGuideAutoClose()
+            }
+
+            false
+        }
+
+        btnTouchUp?.setOnClickListener {
+            if (isGuideOpen()) {
+                pauseGuideAutoClose()
+                moveGuideSelection(-1)
+                resetGuideAutoClose()
+            } else {
+                zapNext()
+            }
+        }
+
+        btnTouchDown?.setOnClickListener {
+            if (isGuideOpen()) {
+                pauseGuideAutoClose()
+                moveGuideSelection(1)
+                resetGuideAutoClose()
+            } else {
+                zapPrevious()
+            }
+        }
+
+        btnTouchRight?.setOnClickListener {
+            if (isGuideOpen()) {
+                resetGuideAutoClose()
+            } else {
+                openGuide()
+            }
+        }
+
+        btnTouchLeft?.setOnClickListener {
+            if (isGuideOpen()) {
+                closeGuide()
+            } else {
+                showInfoOverlay(autoHide = true)
+            }
+        }
+
+        btnTouchOk?.setOnClickListener {
+            if (isGuideOpen()) {
+                pauseGuideAutoClose()
+                selectGuideChannel()
+            } else {
+                showInfoOverlay(autoHide = true)
+            }
+        }
     }
 
     private fun initializePlayer() {
@@ -546,16 +712,27 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         return channelGuidePanel.visibility == View.VISIBLE
     }
 
+    private fun pauseGuideAutoClose() {
+        uiHandler.removeCallbacks(guideAutoCloseRunnable)
+    }
+
     private fun resetGuideAutoClose() {
         uiHandler.removeCallbacks(guideAutoCloseRunnable)
-        uiHandler.postDelayed(guideAutoCloseRunnable, guideAutoCloseMs)
+
+        if (isGuideOpen()) {
+            uiHandler.postDelayed(guideAutoCloseRunnable, guideAutoCloseMs)
+        }
     }
 
     private fun moveGuideSelection(delta: Int) {
         if (grid.isEmpty()) return
 
         val now = System.currentTimeMillis()
-        if (now - lastGuideMoveAt < guideMoveThrottleMs) return
+        if (now - lastGuideMoveAt < guideMoveThrottleMs) {
+            resetGuideAutoClose()
+            return
+        }
+
         lastGuideMoveAt = now
 
         previousGuideSelectedIndex = guideSelectedIndex
@@ -613,7 +790,10 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                 textSize = 12f
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                layoutParams = LinearLayout.LayoutParams(dp(14), LinearLayout.LayoutParams.MATCH_PARENT)
+                layoutParams = LinearLayout.LayoutParams(
+                    dp(14),
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
             }
 
             val logo = ImageView(this).apply {
@@ -685,7 +865,22 @@ class LiveTvPlayerActivity : AppCompatActivity() {
             row.addView(textContainer)
             row.addView(marker)
 
+            row.setOnTouchListener { _, event ->
+                if (!isGuideOpen()) return@setOnTouchListener false
+
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN,
+                    MotionEvent.ACTION_MOVE -> pauseGuideAutoClose()
+
+                    MotionEvent.ACTION_UP,
+                    MotionEvent.ACTION_CANCEL -> resetGuideAutoClose()
+                }
+
+                false
+            }
+
             row.setOnClickListener {
+                pauseGuideAutoClose()
                 guideSelectedIndex = index
                 selectGuideChannel()
             }
@@ -873,10 +1068,14 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                 }
 
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    resetGuideAutoClose()
                     true
                 }
 
-                else -> true
+                else -> {
+                    resetGuideAutoClose()
+                    true
+                }
             }
         }
 

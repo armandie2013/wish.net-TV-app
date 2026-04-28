@@ -4,9 +4,14 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Permite instalar en TV y también en celulares -->
     <uses-feature
         android:name="android.software.leanback"
-        android:required="true" />
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -23,43 +28,53 @@
         <activity
             android:name=".ui.home.HomeActivity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.WishnetTVapp" />
 
         <activity
             android:name=".ui.login.LoginEmailActivity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.WishnetTVapp" />
 
         <activity
             android:name=".ui.login.LoginPasswordActivity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.WishnetTVapp" />
 
         <activity
             android:name=".ui.password.ChangePasswordStep1Activity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.WishnetTVapp" />
 
         <activity
             android:name=".ui.password.ChangePasswordStep2Activity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.WishnetTVapp" />
 
-        <!-- ✅ PLAYER -->
         <activity
             android:name=".ui.live.LiveTvPlayerActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.WishnetTVapp" />
 
-        <!-- ✅ MAIN -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.WishnetTVapp">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
+                <!-- Launcher normal para celulares -->
+                <category android:name="android.intent.category.LAUNCHER" />
+
+                <!-- Launcher para Android TV -->
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
