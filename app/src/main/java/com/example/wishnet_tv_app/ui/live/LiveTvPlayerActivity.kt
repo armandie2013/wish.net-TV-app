@@ -64,12 +64,6 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private lateinit var channelGuideScroll: ScrollView
     private lateinit var channelGuideList: LinearLayout
 
-    /*
-        Controles táctiles para celulares.
-
-        Nullable para que no rompa Android TV si algún layout alternativo
-        no tiene estos IDs.
-    */
     private var touchControlsOverlay: LinearLayout? = null
     private var btnTouchUp: TextView? = null
     private var btnTouchDown: TextView? = null
@@ -96,6 +90,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
     private var playJob: Job? = null
     private var presenceJob: Job? = null
+    private var routeRefreshJob: Job? = null
 
     private val uiHandler = Handler(Looper.getMainLooper())
 
@@ -104,8 +99,26 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     private var isChangingChannel = false
     private var recoveryAttempt = 0
 
-    private val maxRecoveryAttempts = 3
     private val guideAutoCloseMs = 5000L
+    private val initialRecoveryDelayMs = 8500L
+    private val playerErrorRecoveryDelayMs = 2500L
+    private val apiErrorRecoveryDelayMs = 5000L
+    private val maxRecoveryDelayMs = 15000L
+
+    /*
+     * Cada 2 minutos la app vuelve a consultar al backend la mejor ruta
+     * para el canal actual. Si el backend responde una URL distinta,
+     * la app cambia automáticamente a esa nueva ruta.
+     *
+     * Ejemplo:
+     * - Estaba viendo por Edge Ancasti.
+     * - Cae el edge.
+     * - La app pide ruta nueva y el backend entrega Origin.
+     * - La app sigue reproduciendo Origin.
+     * - Cada 2 minutos vuelve a consultar.
+     * - Si el backend vuelve a entregar Edge Ancasti, la app cambia sola.
+     */
+    private val routeRefreshIntervalMs = 120_000L
 
     private var lastGuideMoveAt = 0L
     private val guideMoveThrottleMs = 55L
@@ -143,7 +156,13 @@ class LiveTvPlayerActivity : AppCompatActivity() {
     }
 
     private val delayedRecovery = Runnable {
-        if (!pendingRecovery || isChangingChannel) return@Runnable
+        if (!pendingRecovery) return@Runnable
+
+        if (isChangingChannel && currentStreamUrl.isNullOrBlank()) {
+            scheduleRecovery(delayMs = apiErrorRecoveryDelayMs)
+            return@Runnable
+        }
+
         runSmartRecovery()
     }
 
@@ -204,25 +223,16 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         }
     }
 
-    /*
-        Corrige el comportamiento en celulares:
-        mientras el usuario toca o desplaza la lista, la guía NO se cierra.
-        Recién cuando levanta el dedo vuelve a empezar el contador de 5 segundos.
-    */
     private fun setupGuideTouchBehavior() {
         channelGuidePanel.setOnTouchListener { _, event ->
             if (!isGuideOpen()) return@setOnTouchListener false
 
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN,
-                MotionEvent.ACTION_MOVE -> {
-                    pauseGuideAutoClose()
-                }
+                MotionEvent.ACTION_MOVE -> pauseGuideAutoClose()
 
                 MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_CANCEL -> {
-                    resetGuideAutoClose()
-                }
+                MotionEvent.ACTION_CANCEL -> resetGuideAutoClose()
             }
 
             false
@@ -233,14 +243,10 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN,
-                MotionEvent.ACTION_MOVE -> {
-                    pauseGuideAutoClose()
-                }
+                MotionEvent.ACTION_MOVE -> pauseGuideAutoClose()
 
                 MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_CANCEL -> {
-                    resetGuideAutoClose()
-                }
+                MotionEvent.ACTION_CANCEL -> resetGuideAutoClose()
             }
 
             false
@@ -251,14 +257,10 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN,
-                MotionEvent.ACTION_MOVE -> {
-                    pauseGuideAutoClose()
-                }
+                MotionEvent.ACTION_MOVE -> pauseGuideAutoClose()
 
                 MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_CANCEL -> {
-                    resetGuideAutoClose()
-                }
+                MotionEvent.ACTION_CANCEL -> resetGuideAutoClose()
             }
 
             false
@@ -271,10 +273,6 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         val isTvDevice = packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
         val hasTouchscreen = packageManager.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
 
-        /*
-            En Android TV queda oculto.
-            En celulares queda visible.
-        */
         overlay.visibility =
             if (hasTouchscreen && !isTvDevice) View.VISIBLE else View.GONE
 
@@ -362,7 +360,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                         when (playbackState) {
                             Player.STATE_BUFFERING -> {
                                 showLoadingOverlayDelayed()
-                                scheduleRecovery()
+                                scheduleRecovery(delayMs = initialRecoveryDelayMs)
                             }
 
                             Player.STATE_READY -> {
@@ -373,8 +371,9 @@ class LiveTvPlayerActivity : AppCompatActivity() {
                             }
 
                             Player.STATE_ENDED -> {
+                                showStatus("Señal finalizada. Reconectando...")
                                 showLoadingOverlayDelayed()
-                                scheduleRecovery()
+                                scheduleRecovery(delayMs = playerErrorRecoveryDelayMs)
                             }
 
                             Player.STATE_IDLE -> Unit
@@ -397,7 +396,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
                         showStatus("Problema de señal. Reintentando...")
                         showLoadingOverlayDelayed()
-                        scheduleRecovery(delayMs = 2500)
+                        scheduleRecovery(delayMs = playerErrorRecoveryDelayMs)
                     }
                 })
             }
@@ -445,6 +444,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         val channel = grid.getOrNull(currentChannelIndex) ?: return
 
         playJob?.cancel()
+        stopRouteRefreshLoop()
 
         if (resetRecovery) {
             recoveryAttempt = 0
@@ -469,12 +469,14 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
                     isChangingChannel = false
                     handleError(error, "Error resolviendo canal")
+                    scheduleRecovery(delayMs = apiErrorRecoveryDelayMs)
                 }
             } catch (error: CancellationException) {
                 // Normal cuando el usuario cambia rápido de canal.
             } catch (error: Throwable) {
                 isChangingChannel = false
                 handleError(error, "Error resolviendo canal")
+                scheduleRecovery(delayMs = apiErrorRecoveryDelayMs)
             }
         }
     }
@@ -485,6 +487,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         if (!response.ok || streamUrl.isNullOrBlank()) {
             isChangingChannel = false
             showStatus(response.message ?: "No se pudo reproducir el canal")
+            scheduleRecovery(delayMs = apiErrorRecoveryDelayMs)
             return
         }
 
@@ -495,37 +498,175 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         currentPlaybackMode = response.playback.mode ?: "proxy-ts"
 
         updateInfoOverlay(channel)
+
+        isChangingChannel = false
+
         prepareAndPlay(streamUrl)
         liveTvPrefs.saveLastChannelId(channel.id)
+
+        startRouteRefreshLoop()
+    }
+
+    private fun startRouteRefreshLoop() {
+        stopRouteRefreshLoop()
+
+        routeRefreshJob = lifecycleScope.launch {
+            while (isActive) {
+                delay(routeRefreshIntervalMs)
+
+                if (!isActive) break
+                refreshCurrentRouteIfNeeded()
+            }
+        }
+    }
+
+    private fun stopRouteRefreshLoop() {
+        routeRefreshJob?.cancel()
+        routeRefreshJob = null
+    }
+
+    private suspend fun refreshCurrentRouteIfNeeded() {
+        val channel = grid.getOrNull(currentChannelIndex) ?: return
+
+        /*
+         * No consultamos si justo está cambiando de canal o en recuperación.
+         * En esos casos ya hay otra lógica activa pidiendo ruta nueva.
+         */
+        if (isChangingChannel || pendingRecovery) {
+            return
+        }
+
+        val playbackState = player?.playbackState
+
+        /*
+         * Solo revalidamos ruta si el canal está reproduciendo o listo.
+         * Si está en buffering/error, dejamos trabajar a la lógica de reconexión.
+         */
+        if (playbackState != Player.STATE_READY) {
+            return
+        }
+
+        try {
+            val result = repository.getPlayInfo(channel.id)
+
+            result.onSuccess { response ->
+                val newStreamUrl = response.playback?.streamUrl
+
+                if (!response.ok || newStreamUrl.isNullOrBlank()) {
+                    Log.w(
+                        "LiveTvPlayer",
+                        "Route refresh ignorado: respuesta inválida para ${channel.name}"
+                    )
+                    return@onSuccess
+                }
+
+                val oldStreamUrl = currentStreamUrl
+
+                currentStrategy = response.strategy ?: currentStrategy
+                currentNodeName = response.node?.nombre ?: currentNodeName
+                currentNodeCode = response.node?.codigo ?: currentNodeCode
+                currentPlaybackMode = response.playback.mode ?: currentPlaybackMode
+
+                if (oldStreamUrl.isNullOrBlank()) {
+                    currentStreamUrl = newStreamUrl
+                    return@onSuccess
+                }
+
+                if (newStreamUrl != oldStreamUrl) {
+                    Log.i(
+                        "LiveTvPlayer",
+                        "Ruta actualizada para ${channel.name}. Cambiando stream."
+                    )
+
+                    showStatus("Ruta actualizada. Cambiando señal...")
+
+                    currentStreamUrl = newStreamUrl
+                    updateInfoOverlay(channel)
+
+                    prepareAndPlay(newStreamUrl)
+                } else {
+                    Log.d(
+                        "LiveTvPlayer",
+                        "Route refresh sin cambios para ${channel.name}"
+                    )
+                }
+            }.onFailure { error ->
+                if (error is CancellationException) return
+
+                if (error is SessionExpiredException) {
+                    goToLogin()
+                    return
+                }
+
+                /*
+                 * Importante:
+                 * Si falla esta consulta, NO cortamos la reproducción actual.
+                 * La app sigue viendo el canal con la ruta que ya tiene.
+                 */
+                Log.w(
+                    "LiveTvPlayer",
+                    "No se pudo revalidar ruta. Se mantiene la ruta actual: ${error.message}"
+                )
+            }
+        } catch (error: CancellationException) {
+            // Normal si se cierra la pantalla o cambia de canal.
+        } catch (error: Throwable) {
+            if (error is SessionExpiredException) {
+                goToLogin()
+                return
+            }
+
+            Log.w(
+                "LiveTvPlayer",
+                "Error revalidando ruta. Se mantiene la ruta actual: ${error.message}"
+            )
+        }
     }
 
     private fun runSmartRecovery() {
-        if (isChangingChannel) return
+        if (currentChannelIndex !in grid.indices) {
+            cancelRecovery()
+            return
+        }
+
+        if (isChangingChannel && currentStreamUrl.isNullOrBlank()) {
+            scheduleRecovery(delayMs = apiErrorRecoveryDelayMs)
+            return
+        }
 
         recoveryAttempt += 1
 
-        when (recoveryAttempt) {
-            1 -> {
+        val phase = (recoveryAttempt - 1) % 3
+        val nextDelay = recoveryDelayForAttempt(recoveryAttempt)
+
+        when (phase) {
+            0 -> {
                 showStatus("Reintentando señal...")
                 reloadCurrentStreamUrl()
             }
 
-            2 -> {
+            1 -> {
                 showStatus("Resolviendo ruta nuevamente...")
                 playCurrentChannel(resetRecovery = false)
             }
 
-            3 -> {
-                showStatus("Último reintento de señal...")
+            else -> {
+                showStatus("Reconectando con el canal...")
                 playCurrentChannel(resetRecovery = false)
             }
-
-            else -> {
-                pendingRecovery = false
-                hideLoadingOverlay()
-                showStatus("No se pudo recuperar la señal")
-            }
         }
+
+        scheduleRecovery(delayMs = nextDelay)
+    }
+
+    private fun recoveryDelayForAttempt(attempt: Int): Long {
+        val delay = when {
+            attempt <= 1 -> 5000L
+            attempt == 2 -> 8000L
+            else -> 12000L + ((attempt - 3) * 1000L)
+        }
+
+        return delay.coerceAtMost(maxRecoveryDelayMs)
     }
 
     private fun reloadCurrentStreamUrl() {
@@ -634,13 +775,12 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         loadingOverlay.visibility = View.GONE
     }
 
-    private fun scheduleRecovery(delayMs: Long = 8500) {
-        if (isChangingChannel) return
-        if (recoveryAttempt >= maxRecoveryAttempts) return
+    private fun scheduleRecovery(delayMs: Long = initialRecoveryDelayMs) {
+        if (currentChannelIndex !in grid.indices) return
 
         pendingRecovery = true
         uiHandler.removeCallbacks(delayedRecovery)
-        uiHandler.postDelayed(delayedRecovery, delayMs)
+        uiHandler.postDelayed(delayedRecovery, delayMs.coerceAtLeast(1000L))
     }
 
     private fun cancelRecovery() {
@@ -652,6 +792,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         if (grid.isEmpty()) return
 
         cancelRecovery()
+        stopRouteRefreshLoop()
         hideInfoOverlay()
         closeGuide()
 
@@ -668,6 +809,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         if (grid.isEmpty()) return
 
         cancelRecovery()
+        stopRouteRefreshLoop()
         hideInfoOverlay()
         closeGuide()
 
@@ -762,6 +904,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
         closeGuide()
         hideInfoOverlay()
         cancelRecovery()
+        stopRouteRefreshLoop()
 
         currentChannelIndex = selectedIndex
         guideSelectedIndex = selectedIndex
@@ -1176,6 +1319,7 @@ class LiveTvPlayerActivity : AppCompatActivity() {
 
         playJob?.cancel()
         presenceJob?.cancel()
+        stopRouteRefreshLoop()
 
         cancelRecovery()
         hideLoadingOverlay()
